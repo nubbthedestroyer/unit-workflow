@@ -29,11 +29,18 @@ unit-workflow is four rules that fix those four problems:
 
 You say what you want. The foreman (the assistant you talk to) turns it into a unit and hands it to the crew.
 
-```
-you ──▶ foreman ──▶ 1. Brief ──▶ 2. Builder ──▶ 3. Checker ──▶ 5. Second checker ──▶ 6. Merger ──▶ 7. Inspector ──▶ 8. Ship
-                                                   │  ▲          (risky units only)     (one at a time)  (full suite)
-                                                   ▼  │
-                                                4. Fixer  (max two rounds)
+```mermaid
+flowchart LR
+  you([You]) --> f[Foreman]
+  f --> b1[1. Brief]
+  b1 --> b2[2. Builder<br/>own worktree]
+  b2 --> c3[3. Checker]
+  c3 -- refuted --> x4[4. Fixer<br/>max two rounds]
+  x4 -- re-check --> c3
+  c3 -- confirmed --> c5[5. Second checker<br/>risky units only]
+  c5 --> m6[6. Merger<br/>one at a time]
+  m6 --> i7[7. Inspector<br/>full suite on main]
+  i7 --> s8([8. Ship])
 ```
 
 1. **Brief.** A one-page contract: your words at the top, the files the unit owns, the files it must not touch, where to copy patterns from, and the commands that prove it is done.
