@@ -4,9 +4,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
-[![Workers run on Claude Opus](https://img.shields.io/badge/workers-Claude%20Opus-8B5CF6)](skill/unit-workflow/SKILL.md#models-michael-2026-09-08-opus-everywhere)
+[![Workers run on Claude Opus](https://img.shields.io/badge/workers-Claude%20Opus-8B5CF6)](skill/unit-workflow/SKILL.md#models-opus-everywhere)
 [![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
-[![Status: private preview](https://img.shields.io/badge/status-private%20preview-lightgrey)](#status)
+[![Status: public beta](https://img.shields.io/badge/status-public%20beta-0EA5E9)](#status)
+[![Last commit](https://img.shields.io/github/last-commit/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/commits/main)
+[![Issues](https://img.shields.io/github/issues/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/issues)
 
 unit-workflow is a way of running [Claude Code](https://claude.com/claude-code) on a large codebase where every piece of work is a small, written **unit**: one brief, one fresh worker in its own copy of the code, one independent checker, one merge, one full test pass, all in the background while you keep talking about the next thing. Nobody checks their own work, and everything is written down.
 
@@ -183,7 +185,7 @@ Cost: a feature-sized unit spends 400k to 1.1M tokens across its six to ten work
 
 ## Status
 
-Private while it settles. The skill and script are lifted directly from a production project and still carry that project's defaults in a clearly marked section; generalizing them is the next step.
+Public beta. The skill, script template, and rules are lifted from a production project where they run daily; the project-specific defaults live in one clearly marked section of `SKILL.md` and two constants at the top of the script template, so adopting it is an edit, not a rewrite. Issues and questions are welcome.
 
 ## License
 
