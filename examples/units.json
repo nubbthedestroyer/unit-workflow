@@ -1,0 +1,106 @@
+{
+  "units": [
+    {
+      "n": "73",
+      "key": "try-flow-v2",
+      "title": "continuous uploads, recipes intake, counters, next step; jobs pipe template + notify-once",
+      "contract": "73-try-flow-v2.md",
+      "runId": "wf_d66fc393-042",
+      "status": "merged",
+      "queuedBehind": [],
+      "launchedAt": "2026-09-10T17:10:00Z",
+      "mergedAt": "2026-09-10T17:40:00Z",
+      "outcome": "verified+merged; parity gap import_recipe_text -> fix agent"
+    },
+    {
+      "n": "74",
+      "key": "try-palette",
+      "title": "paint-on-black multicolour palette for the try experience; CTA placement",
+      "contract": "74-try-palette.md",
+      "runId": "wf_aa44f9b7-62f",
+      "status": "merged",
+      "queuedBehind": [
+        "73"
+      ],
+      "launchedAt": "2026-09-10T17:45:00Z",
+      "mergedAt": "2026-09-10T18:20:00Z",
+      "outcome": "verified+merged; design-parity test anchor regression -> fix agent"
+    },
+    {
+      "n": "75",
+      "key": "processing-walkthrough",
+      "title": "autoplay carousel walkthrough while invoices process",
+      "contract": "75-processing-walkthrough.md",
+      "runId": "wf_66047b41-770",
+      "status": "merged",
+      "queuedBehind": [
+        "74"
+      ],
+      "launchedAt": "2026-09-10T18:25:00Z",
+      "mergedAt": "2026-09-10T19:05:00Z",
+      "outcome": "verified+merged; suite fully green"
+    },
+    {
+      "n": "76",
+      "key": "jobs-push-v2",
+      "title": "run-one responds fast via after(); delayed SQS self-scheduling; hourly fallback drain",
+      "contract": "76-jobs-push-v2.md",
+      "runId": "wf_aa44f9b7-62f",
+      "status": "merged",
+      "queuedBehind": [
+        "73"
+      ],
+      "launchedAt": "2026-09-10T17:45:00Z",
+      "mergedAt": "2026-09-10T18:20:00Z",
+      "outcome": "verified+merged"
+    },
+    {
+      "n": "77",
+      "key": "savings-estimate",
+      "title": "savings range hero: the star of the sandbox and its CTA",
+      "contract": "77-savings-estimate.md",
+      "runId": "wf_17b8ceab-4b6",
+      "status": "merged",
+      "queuedBehind": [],
+      "launchedAt": "2026-09-10T20:00:00Z",
+      "mergedAt": "2026-09-10T20:50:00Z",
+      "outcome": "verified+merged; suite 2428 green after local Postgres recovered"
+    },
+    {
+      "n": "78",
+      "key": "sandbox-v3",
+      "title": "items vs national average, monthly revenue on the front door, start over",
+      "contract": "78-sandbox-v3.md",
+      "runId": "wf_0d0c8ad8-364",
+      "status": "merged",
+      "queuedBehind": [],
+      "launchedAt": "2026-09-10T21:40:00Z",
+      "mergedAt": "2026-09-10T22:50:00Z",
+      "outcome": "verified+merged; try-palette test anchor regression (from c2e9f5b) -> fix agent"
+    },
+    {
+      "n": "79",
+      "key": "chat-pane-resize",
+      "title": "Miles chat pane grip pill and resize",
+      "contract": "79-chat-pane-resize.md",
+      "runId": "wf_db9122bf-366",
+      "status": "merged",
+      "queuedBehind": [],
+      "launchedAt": "2026-09-10T21:55:00Z",
+      "mergedAt": "2026-09-10T22:20:00Z",
+      "outcome": "verified+merged; suite green"
+    },
+    {
+      "n": "80",
+      "key": "sandbox-retention-monday",
+      "title": "return-visit CTA, exempt IPs, Monday board connector, S3 retention archive",
+      "contract": "80-sandbox-retention-monday.md",
+      "runId": "wf_bc540fbb-e7c",
+      "status": "merged",
+      "queuedBehind": [],
+      "launchedAt": "2026-09-10T23:40:00Z",
+      "mergedAt": "2026-09-11T00:20:00Z",
+      "outcome": "verified+merged; 3 new tests used the Lakehouse fixture name -> fix agent; catalog-live reseed race pre-existing"
+    }
+  ]
+}
