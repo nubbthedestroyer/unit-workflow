@@ -1,5 +1,5 @@
 export const meta = {
-  name: 'platecost-round2',
+  name: 'unit-workflow',
   description: 'E2E round 2 under rules v2: per-unit worktree, Tier 1 Sonnet verify, Tier 2 Opus verify for risky units, sequential Sonnet merges, one integration pass',
   phases: [
     { title: 'Port', detail: 'Opus edit per unit in its own worktree (cap 60 calls)' },
@@ -9,10 +9,10 @@ export const meta = {
     { title: 'Integration', detail: 'Sonnet runs the suite on main; Opus reviews failures against source' },
   ],
 }
-const PLAN = '/Users/mlucas/Documents/repos/platecost-next/docs/plan'
-const TARGET = '/Users/mlucas/Documents/repos/platecost-next'
+const PLAN = '/absolute/path/to/your-repo/docs/plan'   // edit me
+const TARGET = '/absolute/path/to/your-repo'          // edit me
 const UNITS = args && args.units ? args.units : []   // [{key, risky, brief, contract}]
-const SHARED = 'PlateCost rewrite. Repo ' + TARGET + '. Plan ' + PLAN + ' (architecture.md sections 4 and 6, contracts/<unit>.md). Rules: work only in your own worktree ' + TARGET + '/.worktrees/<unit> on branch unit/<unit> from origin/main; batch shell commands; write each file once; vitest --reporter=dot; pipe output over 40 lines through tail -40; open only files you must change or lines the contract cites; never re-read a file; skip pnpm build (runs at merge); never write a secret; commit with trailer Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com> and push your branch. Update your unit row in ' + PLAN + '/ledger.md; ledgerUpdated=true. Return ONLY the structured result; no code, no diffs, one sentence per item. '
+const SHARED = 'Project build. Repo ' + TARGET + '. Plan ' + PLAN + ' (architecture.md sections 4 and 6, contracts/<unit>.md). Rules: work only in your own worktree ' + TARGET + '/.worktrees/<unit> on branch unit/<unit> from origin/main; batch shell commands; write each file once; vitest --reporter=dot; pipe output over 40 lines through tail -40; open only files you must change or lines the contract cites; never re-read a file; skip pnpm build (runs at merge); never write a secret; commit with trailer Co-Authored-By: Claude <noreply@anthropic.com> and push your branch. Update your unit row in ' + PLAN + '/ledger.md; ledgerUpdated=true. Return ONLY the structured result; no code, no diffs, one sentence per item. '
 const REPORT = { type: 'object', properties: { status: { type: 'string', enum: ['done', 'partial', 'blocked'] }, findings: { type: 'array', items: { type: 'object', properties: { path: { type: 'string' }, line: { type: 'number' }, note: { type: 'string' } }, required: ['path', 'line', 'note'] } }, changed: { type: 'array', items: { type: 'string' } }, verified: { type: 'array', items: { type: 'object', properties: { cmd: { type: 'string' }, pass: { type: 'boolean' } }, required: ['cmd', 'pass'] } }, ledgerUpdated: { type: 'boolean' }, blockers: { type: 'array', items: { type: 'string' } } }, required: ['status', 'findings', 'changed', 'verified', 'ledgerUpdated', 'blockers'] }
 const VERDICT = { type: 'object', properties: { verdict: { type: 'string', enum: ['verified', 'refuted', 'blocked'] }, findings: { type: 'array', items: { type: 'object', properties: { path: { type: 'string' }, line: { type: 'number' }, note: { type: 'string' } }, required: ['path', 'line', 'note'] } }, verified: { type: 'array', items: { type: 'object', properties: { cmd: { type: 'string' }, pass: { type: 'boolean' } }, required: ['cmd', 'pass'] } }, ledgerUpdated: { type: 'boolean' } }, required: ['verdict', 'findings', 'verified', 'ledgerUpdated'] }
 
