@@ -3,13 +3,10 @@
 **Ship real software with a crew of AI workers you never have to babysit.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Built for Claude Code](https://img.shields.io/badge/built%20for-Claude%20Code-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
-[![Runs on Claude Opus](https://img.shields.io/badge/workers-Claude%20Opus-8B5CF6)](skill/unit-workflow/SKILL.md#models-michael-2026-09-08-opus-everywhere)
-[![Units shipped](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
-[![Verification](https://img.shields.io/badge/verification-two%20tiers%2C%20never%20self--graded-0EA5E9)](docs/how-it-works.md#the-two-tiers-of-checking)
-[![Truth on disk](https://img.shields.io/badge/truth-on%20disk-F59E0B)](docs/how-it-works.md#what-you-see)
-[![Diagram](https://img.shields.io/badge/diagram-draw.io-F08705?logo=diagramsdotnet&logoColor=white)](docs/diagrams/unit-workflow.drawio)
-[![Status](https://img.shields.io/badge/status-private%20preview-lightgrey)](#status)
+[![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
+[![Workers run on Claude Opus](https://img.shields.io/badge/workers-Claude%20Opus-8B5CF6)](skill/unit-workflow/SKILL.md#models-michael-2026-09-08-opus-everywhere)
+[![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
+[![Status: private preview](https://img.shields.io/badge/status-private%20preview-lightgrey)](#status)
 
 unit-workflow is a way of running [Claude Code](https://claude.com/claude-code) on a large codebase where every piece of work is a small, written **unit**: one brief, one fresh worker in its own copy of the code, one independent checker, one merge, one full test pass, all in the background while you keep talking about the next thing. Nobody checks their own work, and everything is written down.
 
