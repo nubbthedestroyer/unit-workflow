@@ -25,16 +25,16 @@ The orchestrator (the assistant the owner talks to) never reads source or runs b
 | suite / review (integration) | claude-opus-5-5 | low / high | 20 |
 | testers (E2E rounds) | claude-opus-5-5 | medium | 40 |
 | Explore lookups (read-only index) | sonnet allowed | low | n/a |
-Max 3 Opus agents in parallel per run (the template enforces it). Every spawn sets `model: WORKER_MODEL` (`claude-opus-5-5`) so workers stay on Opus 5.5 even though the session runs Fable.
+Max 3 Opus agents in parallel per run across every tier (the template routes all agents through one limiter; `args.maxOpus` overrides). Every spawn sets `model: WORKER_MODEL` (`claude-opus-5-5`) so workers stay on Opus 5.5 even though the session runs Fable.
 
 ## Lifecycle of a unit
 1. **Number + contract.** Next NN from the ledger. Write `plan/contracts/NN-<key>.md` from `templates/contract.md`: purpose in the owner's words, Owns, reference slice (path:line), dependencies, pre-assigned migration numbers, acceptance commands. Workers never explore; the contract is the brief.
 2. **Conflict check.** If the unit edits files another running unit owns, queue it: `queuedBehind: ["NN"]`. Otherwise launch now (parallel is the default).
 3. **Register** in `plan/units.json` (see schema below), add the ledger row, note the run id in `plan/resume.md`, commit `plan/`.
-4. **Launch** `Workflow({scriptPath: plan/round2-workflow.js, args: {units:[{key, risky, contract, brief}]}})` (template: `templates/unit-workflow.js`). One run can carry several disjoint units.
-5. **Tiers** run inside the script: port -> verify1 (fix -> verify1, max 2 rounds) -> verify2 if risky -> sequential merge -> suite + review.
+4. **Launch** the saved workflow by name: `Workflow({name: 'unit-workflow', args: {target, plan, units:[{key, risky, contract, brief}], ...project defaults}})`. It is `templates/unit-workflow.js`, linked into `~/.claude/workflows/`; never copy it per project. Project settings (`project`, `planDocs`, `suiteCmd`, `trailer`, `maxOpus`) go in `args`. One run can carry several disjoint units.
+5. **Tiers** run inside the script, per unit with no barrier: port -> verify1 (fix -> verify1, max 2 rounds) -> verify2 if risky -> merge. Each unit merges as soon as it clears, one merge at a time; the suite + review run once after the last merge.
 6. **On completion** update `units.json` (`status`, `mergedAt`, `outcome`), the ledger phase log, then launch anything queued behind it, then deploy if the owner expects it (`vercel deploy --prod --yes --archive=tgz` from the target repo).
-7. Spend-limit errors kill agents silently: resume with `resumeFromRunId`; edited prompts invalidate the cached prefix, so new prompts mean a new run with `args.only`.
+7. Spend-limit errors kill agents silently: resume with `resumeFromRunId`; edited prompts invalidate the cached prefix, so new prompts mean a new run with `args.only: ["<key>", ...]` (same `units` list; only those keys run).
 
 ## units.json schema
 ```json
@@ -60,7 +60,8 @@ Run: `node ~/.claude/skills/unit-workflow/scripts/status.mjs <plan dir> <session
 - After every merge wave: prune merged worktrees when the owner okays (Vercel CLI hits a 15k-file limit otherwise; use `--archive=tgz`).
 
 ## Current project defaults (edit for your project)
-- Target repo: `<absolute path to the repo>`; plan dir: `<repo>/docs/plan` (`units.json`, `ledger.md`, `contracts/`, `round2-workflow.js` copied from `templates/unit-workflow.js` with `PLAN` and `TARGET` edited).
+- Target repo: `<absolute path to the repo>`; plan dir: `<repo>/docs/plan` (`units.json`, `ledger.md`, `contracts/`).
+- Launch args (add `units`, and `only` when rerunning a subset): `{"target": "<repo>", "plan": "<repo>/docs/plan", "project": "<one-line project name>", "planDocs": "<docs workers should read>, contracts/<unit>.md", "suiteCmd": "<build, test and gate commands>"}`.
 - Status: `node ~/.claude/skills/unit-workflow/scripts/status.mjs <repo>/docs/plan <session workflows dir>`.
 - Worktree agents must stop ONLY the dev server they started (kill by the PID they saved, never `pkill -f next` or `killall node`); one-off main-checkout agents run one at a time; always `cd` with an absolute path before touching plan files.
 - Before every production deploy: check and apply pending migrations, then deploy with your platform's command. Write the exact commands here so the foreman never guesses.
