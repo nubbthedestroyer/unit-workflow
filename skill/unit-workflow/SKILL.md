@@ -2,7 +2,7 @@
 name: unit-workflow
 description: >-
   Multi-tier unit orchestration for large builds: contracts, per-unit worktrees,
-  Opus port/fix/verify/merge tiers via the Workflow tool, a units.json registry, a ledger on
+  Opus 5.5 port/fix/verify/merge tiers via the Workflow tool, a units.json registry, a ledger on
   disk, and a status command that shows every running unit's stage plus the last completed
   ones. Use whenever the owner says "use a workflow", "unit", "status?", "where are we",
   "summarize running units", "launch <thing> as a unit", or asks to queue work behind another unit.
@@ -14,17 +14,18 @@ One **unit** = one contract + one fresh worktree branch + one Workflow run throu
 The orchestrator (the assistant the owner talks to) never reads source or runs build commands; agents do. Truth lives on disk:
 `plan/units.json` (registry), `plan/ledger.md` (rows + phase log), `plan/resume.md`, `plan/contracts/NN-*.md`.
 
-## Models (Opus everywhere)
+## Models (Fable orchestrates, Opus 5.5 everywhere else)
 | Role | model | effort | cap (tool calls) |
 |---|---|---|---|
-| port / fix | opus | medium | 60 / 30 |
-| verify1 (Tier 1) | opus | low | 20 |
-| verify2 (Tier 2, risky units only: tenancy, auth, money, ingestion, external doors) | opus | high | 20 |
-| merge (sequential, one at a time) | opus | low | 15 |
-| suite / review (integration) | opus | low / high | 20 |
-| testers (E2E rounds) | opus | medium | 40 |
+| orchestrator (main session: contracts, launches, status) | Fable (session model, not set in the script) | session | n/a |
+| port / fix | claude-opus-5-5 | medium | 60 / 30 |
+| verify1 (Tier 1) | claude-opus-5-5 | low | 20 |
+| verify2 (Tier 2, risky units only: tenancy, auth, money, ingestion, external doors) | claude-opus-5-5 | high | 20 |
+| merge (sequential, one at a time) | claude-opus-5-5 | low | 15 |
+| suite / review (integration) | claude-opus-5-5 | low / high | 20 |
+| testers (E2E rounds) | claude-opus-5-5 | medium | 40 |
 | Explore lookups (read-only index) | sonnet allowed | low | n/a |
-Max 3 Opus agents in parallel per run (the template enforces it). Every spawn sets `model`.
+Max 3 Opus agents in parallel per run (the template enforces it). Every spawn sets `model: WORKER_MODEL` (`claude-opus-5-5`) so workers stay on Opus 5.5 even though the session runs Fable.
 
 ## Lifecycle of a unit
 1. **Number + contract.** Next NN from the ledger. Write `plan/contracts/NN-<key>.md` from `templates/contract.md`: purpose in the owner's words, Owns, reference slice (path:line), dependencies, pre-assigned migration numbers, acceptance commands. Workers never explore; the contract is the brief.

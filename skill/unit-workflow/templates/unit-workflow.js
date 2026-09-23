@@ -1,12 +1,12 @@
 export const meta = {
   name: 'unit-workflow',
-  description: 'E2E round 2 under rules v2: per-unit worktree, Tier 1 Sonnet verify, Tier 2 Opus verify for risky units, sequential Sonnet merges, one integration pass',
+  description: 'E2E round 2 under rules v2: per-unit worktree, Opus 5.5 workers (Fable orchestrates), Tier 2 verify for risky units, sequential merges, one integration pass',
   phases: [
-    { title: 'Port', detail: 'Opus edit per unit in its own worktree (cap 60 calls)' },
-    { title: 'Tier 1', detail: 'Sonnet: acceptance commands, typecheck, gates (cap 20); fix round on failure (cap 30), max 2' },
-    { title: 'Tier 2', detail: 'Opus refute-only pass for risky units after Tier 1 passes (cap 20)' },
-    { title: 'Merge', detail: 'Sonnet, sequential, unit tests only, then one full suite (cap 15)' },
-    { title: 'Integration', detail: 'Sonnet runs the suite on main; Opus reviews failures against source' },
+    { title: 'Port', detail: 'Opus 5.5 edit per unit in its own worktree (cap 60 calls)' },
+    { title: 'Tier 1', detail: 'Opus 5.5: acceptance commands, typecheck, gates (cap 20); fix round on failure (cap 30), max 2' },
+    { title: 'Tier 2', detail: 'Opus 5.5 refute-only pass for risky units after Tier 1 passes (cap 20)' },
+    { title: 'Merge', detail: 'Opus 5.5, sequential, unit tests only, then one full suite (cap 15)' },
+    { title: 'Integration', detail: 'Opus 5.5 runs the suite on main and reviews failures against source' },
   ],
 }
 const PLAN = '/absolute/path/to/your-repo/docs/plan'   // edit me
@@ -16,13 +16,16 @@ const SHARED = 'Project build. Repo ' + TARGET + '. Plan ' + PLAN + ' (architect
 const REPORT = { type: 'object', properties: { status: { type: 'string', enum: ['done', 'partial', 'blocked'] }, findings: { type: 'array', items: { type: 'object', properties: { path: { type: 'string' }, line: { type: 'number' }, note: { type: 'string' } }, required: ['path', 'line', 'note'] } }, changed: { type: 'array', items: { type: 'string' } }, verified: { type: 'array', items: { type: 'object', properties: { cmd: { type: 'string' }, pass: { type: 'boolean' } }, required: ['cmd', 'pass'] } }, ledgerUpdated: { type: 'boolean' }, blockers: { type: 'array', items: { type: 'string' } } }, required: ['status', 'findings', 'changed', 'verified', 'ledgerUpdated', 'blockers'] }
 const VERDICT = { type: 'object', properties: { verdict: { type: 'string', enum: ['verified', 'refuted', 'blocked'] }, findings: { type: 'array', items: { type: 'object', properties: { path: { type: 'string' }, line: { type: 'number' }, note: { type: 'string' } }, required: ['path', 'line', 'note'] } }, verified: { type: 'array', items: { type: 'object', properties: { cmd: { type: 'string' }, pass: { type: 'boolean' } }, required: ['cmd', 'pass'] } }, ledgerUpdated: { type: 'boolean' } }, required: ['verdict', 'findings', 'verified', 'ledgerUpdated'] }
 
+// Workers pin Opus 5.5; the orchestrator (the main session) stays on Fable
+const WORKER_MODEL = 'claude-opus-5-5'
+
 // Opus concurrency cap of 3
 let opusRunning = 0; const opusWaiters = []
 const opusAcquire = () => new Promise(r => { if (opusRunning < 3) { opusRunning++; r() } else opusWaiters.push(r) })
 const opusRelease = () => { opusRunning--; const w = opusWaiters.shift(); if (w) { opusRunning++; w() } }
-const opus = async (prompt, opts) => { await opusAcquire(); try { return await agent(prompt, { ...opts, model: 'opus' }) } finally { opusRelease() } }
+const opus = async (prompt, opts) => { await opusAcquire(); try { return await agent(prompt, { ...opts, model: WORKER_MODEL }) } finally { opusRelease() } }
 
-const tier1 = (u, round) => agent(SHARED + 'You are verify1:' + u.key + ' round ' + round + ' (cap 20 calls, Sonnet). In the worktree run pnpm typecheck, pnpm verify, and every command in the Acceptance test of ' + PLAN + '/contracts/' + u.contract + '. Confirm the result schema and that the ledger row was updated. Refute only on a failing command or a missing Owns item.', { label: 'verify1:' + u.key, phase: 'Tier 1', model: 'opus', effort: 'low', agentType: 'general-purpose', schema: VERDICT })
+const tier1 = (u, round) => agent(SHARED + 'You are verify1:' + u.key + ' round ' + round + ' (cap 20 calls). In the worktree run pnpm typecheck, pnpm verify, and every command in the Acceptance test of ' + PLAN + '/contracts/' + u.contract + '. Confirm the result schema and that the ledger row was updated. Refute only on a failing command or a missing Owns item.', { label: 'verify1:' + u.key, phase: 'Tier 1', model: WORKER_MODEL, effort: 'low', agentType: 'general-purpose', schema: VERDICT })
 
 const results = await pipeline(UNITS,
   (u) => opus(SHARED + 'You are port:' + u.key + ' (cap 60 calls). Unit brief: ' + u.brief + ' Contract: ' + PLAN + '/contracts/' + u.contract + '. Implement fully and write the acceptance tests; run pnpm typecheck and those tests only.', { label: 'port:' + u.key, phase: 'Port', effort: 'medium', agentType: 'general-purpose', schema: REPORT }),
@@ -48,14 +51,14 @@ phase('Merge')
 const merged = []
 for (const r of results.filter(Boolean)) {
   if (r.verdict !== 'verified') { log(r.u.key + ': not merged (' + r.verdict + ')'); continue }
-  const m = await agent(SHARED + 'You are merge:' + r.u.key + ' (cap 15 calls, Sonnet). In ' + TARGET + ' main checkout: git status must be clean; git checkout main && git pull --ff-only && git merge --no-ff origin/unit/' + r.u.key + ' -m merge: ' + r.u.key + '; union both sides for barrel, registry, seed and lockfile files, else prefer main and re-apply the branch additions; pnpm install; pnpm typecheck; run only the tests this unit added; push main; on failure git merge --abort and report blocked.', { label: 'merge:' + r.u.key, phase: 'Merge', model: 'opus', effort: 'low', agentType: 'general-purpose', schema: REPORT })
+  const m = await agent(SHARED + 'You are merge:' + r.u.key + ' (cap 15 calls). In ' + TARGET + ' main checkout: git status must be clean; git checkout main && git pull --ff-only && git merge --no-ff origin/unit/' + r.u.key + ' -m merge: ' + r.u.key + '; union both sides for barrel, registry, seed and lockfile files, else prefer main and re-apply the branch additions; pnpm install; pnpm typecheck; run only the tests this unit added; push main; on failure git merge --abort and report blocked.', { label: 'merge:' + r.u.key, phase: 'Merge', model: WORKER_MODEL, effort: 'low', agentType: 'general-purpose', schema: REPORT })
   log(r.u.key + ': merge ' + (m ? m.status : 'null'))
   if (m && m.status === 'done') merged.push(r.u.key)
 }
 log('merged ' + merged.length + '/' + results.filter(Boolean).length)
 
 phase('Integration')
-const suite = await agent(SHARED + 'You are suite:main (cap 20 calls, Sonnet). On main after git pull: npx dotenv -e .env.development.local -e .env.local -- pnpm build, then pnpm test (no doppler wrapper: the checkout env files carry the right local DB port) --reporter=dot (tail -60), pnpm verify; report counts and every failing file as one-sentence blockers; do not fix.', { label: 'suite:main', phase: 'Integration', model: 'opus', effort: 'low', agentType: 'general-purpose', schema: REPORT })
+const suite = await agent(SHARED + 'You are suite:main (cap 20 calls). On main after git pull: npx dotenv -e .env.development.local -e .env.local -- pnpm build, then pnpm test (no doppler wrapper: the checkout env files carry the right local DB port) --reporter=dot (tail -60), pnpm verify; report counts and every failing file as one-sentence blockers; do not fix.', { label: 'suite:main', phase: 'Integration', model: WORKER_MODEL, effort: 'low', agentType: 'general-purpose', schema: REPORT })
 log('suite: ' + (suite ? suite.status + ' blockers=' + suite.blockers.length : 'null'))
 let review = null
 if (suite && suite.blockers.length) {

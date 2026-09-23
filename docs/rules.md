@@ -14,7 +14,7 @@ Every rule below was paid for. The date is when it was learned; the story is why
 
 ## Models and caps (2026-09-08)
 
-Sonnet workers were not finishing units in one pass and declined feature-sized items as out of scope. Retries cost more than the bigger model. Every worker is now Opus; Sonnet only for read-only lookups. Tool-call caps per role keep a confused worker from spending without limit: roughly 60 to build, 30 to fix, 20 to check, 15 to merge. Three Opus workers at a time per run.
+Sonnet workers were not finishing units in one pass and declined feature-sized items as out of scope. Retries cost more than the bigger model. Every worker is now Opus 5.5 (pinned as `claude-opus-5-5`) while Fable orchestrates; Sonnet only for read-only lookups. Tool-call caps per role keep a confused worker from spending without limit: roughly 60 to build, 30 to fix, 20 to check, 15 to merge. Three Opus workers at a time per run.
 
 ## Worktrees and processes
 

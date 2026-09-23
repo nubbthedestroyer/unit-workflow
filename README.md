@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
-[![Workers run on Claude Opus](https://img.shields.io/badge/workers-Claude%20Opus-8B5CF6)](skill/unit-workflow/SKILL.md#models-opus-everywhere)
+[![Workers run on Claude Opus 5.5](https://img.shields.io/badge/workers-Claude%20Opus%205.5-8B5CF6)](skill/unit-workflow/SKILL.md#models-fable-orchestrates-opus-55-everywhere-else)
 [![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
 [![Status: public beta](https://img.shields.io/badge/status-public%20beta-0EA5E9)](#status)
 [![Last commit](https://img.shields.io/github/last-commit/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/commits/main)
@@ -169,7 +169,7 @@ Everything the foreman does is spelled out in [skill/unit-workflow/SKILL.md](ski
 
 The engine is a Claude Code **dynamic workflow**: a small JavaScript script that orchestrates many agents deterministically. `agent()` spawns a worker with a prompt, a model, a tool-call cap, worktree isolation, and a JSON schema its report must satisfy. `pipeline()` pushes each unit through build → check → fix → second check independently, so one unit can be merging while another is still being checked. Merges and the integration pass run after a barrier, one at a time. Every run has an id and a journal of what each agent returned; a stopped or edited run resumes from cache.
 
-Models: every worker runs on Claude Opus, three at a time per run, with tool-call caps per role (roughly 60 to build, 30 to fix, 20 to check, 15 to merge). Read-only lookups may use Sonnet.
+Models: the orchestrator runs on Claude Fable; every worker runs on Claude Opus 5.5 (pinned as `claude-opus-5-5`), three at a time per run, with tool-call caps per role (roughly 60 to build, 30 to fix, 20 to check, 15 to merge). Read-only lookups may use Sonnet.
 
 Cost: a feature-sized unit spends 400k to 1.1M tokens across its six to ten workers. That is the price of isolation and independent verification. It is cheaper than the long chat that rereads the codebase twice and still ships something half-checked.
 

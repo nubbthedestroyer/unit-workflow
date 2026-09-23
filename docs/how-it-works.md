@@ -87,7 +87,7 @@ Every run has an id (`wf_…`) and a journal of what each agent returned. If a r
 
 ### Models and caps
 
-Every worker runs on Claude Opus (Michael's rule since September 2026: Sonnet was not finishing jobs in one pass, and retries cost more than the bigger model). At most three Opus workers run at once per workflow run. Each role has a tool-call cap so a confused worker cannot spend without limit: roughly 60 calls to build, 30 to fix, 20 to check, 15 to merge.
+The orchestrator runs on Claude Fable. Every worker runs on Claude Opus 5.5, pinned by model ID (Michael's rule since September 2026: Sonnet was not finishing jobs in one pass, and retries cost more than the bigger model). At most three Opus workers run at once per workflow run. Each role has a tool-call cap so a confused worker cannot spend without limit: roughly 60 calls to build, 30 to fix, 20 to check, 15 to merge.
 
 ### The two tiers of checking
 

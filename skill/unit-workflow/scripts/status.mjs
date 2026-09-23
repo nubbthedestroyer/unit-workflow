@@ -28,14 +28,14 @@ const pad = (s, n) => String(s ?? '').padEnd(n).slice(0, n)
 const now = new Date().toISOString()
 const running = reg.filter(u => ['running', 'queued'].includes(u.status))
 console.log('RUNNING / QUEUED (' + running.length + ')')
-console.log(pad('unit', 22) + pad('what', 44) + pad('stage', 30) + pad('model', 6) + pad('calls', 6) + pad('elapsed', 8) + pad('trail', 40) + 'run')
+console.log(pad('unit', 22) + pad('what', 44) + pad('stage', 30) + pad('model', 17) + pad('calls', 6) + pad('elapsed', 8) + pad('trail', 40) + 'run')
 for (const u of running) {
   if (u.status === 'queued') { console.log(pad(u.n + '-' + u.key, 22) + pad(u.title, 44) + pad('queued behind ' + (u.queuedBehind || []).join(','), 30) + pad('', 6) + pad('', 6) + pad('', 8) + pad('', 40) + (u.runId || '')); continue }
   const ag = agentsForRun(u.runId).filter(a => a.label.includes(u.key) || /^(suite|review|ledger):/.test(a.label))
   const live = ag.filter(a => a.verdict === 'running'); const cur = live[live.length - 1] || ag[ag.length - 1]
   const trail = ag.filter(a => a.verdict !== 'running').map(a => a.label.split(':')[0] + '=' + a.verdict).join(' ')
   const stage = cur ? (cur.label + (cur.verdict === 'running' ? '' : ' (' + cur.verdict + ')')) : 'starting'
-  console.log(pad(u.n + '-' + u.key, 22) + pad(u.title, 44) + pad(stage, 30) + pad(cur ? cur.model : '', 6) + pad(cur ? cur.calls : '', 6) + pad(cur ? mins(cur.first, cur.verdict === 'running' ? now : cur.last) : '', 8) + pad(trail, 40) + u.runId)
+  console.log(pad(u.n + '-' + u.key, 22) + pad(u.title, 44) + pad(stage, 30) + pad(cur ? cur.model : '', 17) + pad(cur ? cur.calls : '', 6) + pad(cur ? mins(cur.first, cur.verdict === 'running' ? now : cur.last) : '', 8) + pad(trail, 40) + u.runId)
 }
 const doneUnits = reg.filter(u => ['merged', 'blocked', 'deferred'].includes(u.status)).sort((a, b) => (b.mergedAt || b.launchedAt || '').localeCompare(a.mergedAt || a.launchedAt || '')).slice(0, N)
 console.log('\nLAST COMPLETED (' + doneUnits.length + ')')
