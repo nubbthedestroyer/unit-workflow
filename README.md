@@ -95,8 +95,9 @@ The launch (one call; the script does the rest in the background):
 
 ```js
 Workflow({
-  scriptPath: 'docs/plan/round2-workflow.js',
-  args: { units: [{ key: '79-chat-pane-resize', risky: false,
+  name: 'unit-workflow',
+  args: { target: '/abs/path/to/repo', plan: '/abs/path/to/repo/docs/plan',
+          units: [{ key: '79-chat-pane-resize', risky: false,
                     contract: 'docs/plan/contracts/79-chat-pane-resize.md',
                     brief: 'Grip pill and drag/keyboard resize for the chat pane, persisted.' }] }
 })
@@ -134,7 +135,7 @@ Every worker's report is a fixed JSON shape, so the foreman reads fields, not pa
 
 You need Claude Code with the Workflow tool (dynamic workflows), a git repository, and a test command worth trusting.
 
-1. **Install the skill.** Copy `skill/unit-workflow` to `~/.claude/skills/unit-workflow` (global) or `.claude/skills/unit-workflow` in the repo. Claude Code picks it up when you say "unit", "status?", or "launch X as a unit".
+1. **Install the skill.** Copy `skill/unit-workflow` to `~/.claude/skills/unit-workflow`, then link the workflow so it can be launched by name: `mkdir -p ~/.claude/workflows && ln -s ~/.claude/skills/unit-workflow/templates/unit-workflow.js ~/.claude/workflows/unit-workflow.js`. Claude Code picks the skill up when you say "unit", "status?", or "launch X as a unit".
 2. **Create the plan folder** in your repo:
    ```
    docs/plan/
@@ -142,9 +143,8 @@ You need Claude Code with the Workflow tool (dynamic workflows), a git repositor
      ledger.md           one row per unit
      resume.md           where the last session stopped
      contracts/          one file per unit
-     round2-workflow.js  copy of skill/unit-workflow/templates/unit-workflow.js, paths edited
    ```
-3. **Edit two constants** at the top of `round2-workflow.js`: `PLAN` (the plan folder) and `TARGET` (the repo root). Adjust the acceptance commands in `SHARED` to your stack.
+3. **Record your launch args** in the skill's "Current project defaults": `target` (repo root), `plan` (plan folder), and optionally `project`, `planDocs`, `suiteCmd` (your build, test and gate commands) and `trailer`. The script is shared across projects; nothing in it is edited per repo.
 4. **Write the first contract** from `skill/unit-workflow/templates/contract.md`, register it in `units.json`, and say "launch it".
 5. **Ask "status?"** whenever you like. Say "resume" in a new session and the foreman reads `resume.md` first.
 
