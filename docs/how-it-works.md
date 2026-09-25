@@ -50,8 +50,8 @@ Here is what happens when you say, for example, "the drop zone should stay activ
 4. **Check.** A checker reads the same brief, runs the acceptance commands, clicks through the app, and reports. It either confirms or refutes, with file and line for every finding.
 5. **Fix, then check again.** If refuted, a fixer addresses the findings and the checker looks again. At most two rounds.
 6. **Second check for risky units.** Anything touching money, sign-in, tenant isolation, ingestion, or a public door gets a second, more thorough checker with a different lens.
-7. **Merge.** A merger brings the branch into `main` as soon as the unit passes. Merges happen one at a time so two units never race.
-8. **Inspect.** The full build and test suite run on `main`. An inspector reads any failure and says whether it is new (this unit's fault) or pre-existing noise.
+7. **Merge.** A merger brings the branch into `main` as soon as the unit clears its checks, without waiting for the other units in the run. Merges happen one at a time so two units never race.
+8. **Inspect.** After the last merge of the run, the full build and test suite run once on `main`. An inspector reads any failure and says whether it is new (this unit's fault) or pre-existing noise.
 9. **Ship.** The foreman applies any database migrations to production and lets the deploy run. The ledger records the outcome.
 
 The whole chain runs in the background. You can ask "status?" at any point and get a table of every unit, its stage, and how long it has been there.
@@ -81,13 +81,13 @@ If the first half was enough, stop here. The rest is for people who want to know
 
 ### It runs on Claude Code's dynamic workflows
 
-Claude Code has a tool that runs a small JavaScript script to orchestrate many AI agents deterministically. The script is `skill/unit-workflow/templates/unit-workflow.js`, saved once as a named workflow and shared by every project; the repo path, plan folder and test commands arrive as arguments. One call to it, with a list of units, produces the whole chain above: build, check, fix, second check, merge, inspect. Units run independently: each one merges as soon as it passes (merges still go one at a time), so a quick unit is on `main` while a slow one is still being built. Each step is an `agent()` call with a prompt, a model, a tool-call cap, and, for anything that edits files, worktree isolation. Reports are forced into a JSON schema (`{status, findings, changed, verified, ledgerUpdated, blockers}`) so the foreman reads data, not prose.
+Claude Code has a tool that runs a small JavaScript script to orchestrate many AI agents deterministically. The script is `skill/unit-workflow/templates/unit-workflow.js` in this repository, linked into `~/.claude/workflows/` so the foreman launches it by name (`unit-workflow`) from any project; there is no per-project copy. Project settings (repo path, plan folder, suite command, commit trailer, worker cap) arrive as launch arguments. One call to it, with a list of units, produces the whole chain above: build, check, fix, second check, merge as each unit clears (one at a time), then one inspection pass. Each step is an `agent()` call with a prompt, a model, a tool-call cap, and, for anything that edits files, worktree isolation. Reports are forced into a JSON schema (`{status, findings, changed, verified, ledgerUpdated, blockers}`) so the foreman reads data, not prose.
 
-Every run has an id (`wf_…`) and a journal of what each agent returned. If a run is stopped or the script changes, resuming it replays the unchanged agents from cache and only runs what is new.
+Every run has an id (`wf_…`) and a journal of what each agent returned. If a run is stopped, resuming it replays the unchanged agents from cache and only runs what is new. If the prompts change, the cache no longer matches, so the foreman starts a new run with `args.only` naming just the units that still need work.
 
 ### Models and caps
 
-The orchestrator runs on Claude Fable. Every worker runs on Claude Opus 5.5, pinned by model ID (Michael's rule since September 2026: Sonnet was not finishing jobs in one pass, and retries cost more than the bigger model). At most three Opus workers run at once per workflow run, counting every role. Each role has a tool-call cap so a confused worker cannot spend without limit: roughly 60 calls to build, 30 to fix, 20 to check, 15 to merge.
+The foreman (your main session) runs on Claude Fable. Every worker the script spawns is pinned to Claude Opus 5.5 (the owner's rule since September 2026: Sonnet was not finishing jobs in one pass, and retries cost more than the bigger model). At most three workers run at once per workflow run, across every tier; a launch argument can change the cap. Each role has a tool-call cap so a confused worker cannot spend without limit: roughly 60 calls to build, 30 to fix, 20 to check, 15 to merge.
 
 ### The two tiers of checking
 

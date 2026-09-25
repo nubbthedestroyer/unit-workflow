@@ -7,14 +7,18 @@ Every rule below was paid for. The date is when it was learned; the story is why
 - **The foreman never reads source or runs builds.** Its attention belongs on the plan. When it needs a fact (a line number, a function name) it sends a read-only lookup agent and writes the answer into the contract, so workers never explore either.
 - **One unit, one contract, one worktree, one run.** Every worker gets a brand-new context and a one-page brief. Long chats forget; short briefs don't.
 - **Nobody grades their own homework.** The builder and the checker are always different agents. Risky units (money, sign-in, tenant isolation, ingestion, public doors) get a second checker with an adversarial brief: try to refute it.
-- **Merges are sequential.** Two units never race into `main`. Everything else runs in parallel unless the contracts overlap in files, in which case the later one is `queuedBehind` the earlier.
+- **Merges are sequential, and each unit merges as soon as it clears.** Two units never race into `main`, and no unit waits for the slowest one in its run; one integration pass runs after the last merge. Everything else runs in parallel unless the contracts overlap in files, in which case the later one is `queuedBehind` the earlier.
 - **Reports are data.** Every worker returns a JSON object of a fixed shape (`{status, findings[{path,line,note}], changed[], verified[{cmd,pass}], ledgerUpdated, blockers[]}`), never prose. The foreman reads fields, not paragraphs.
 - **Truth lives on disk.** `units.json`, `ledger.md`, `resume.md`, and `contracts/` are the state. A new session reads `resume.md` first and continues.
 - **Stop for the owner on four things only:** dropping a feature, changing a public URL or API, spending money, touching an external service. Everything else the foreman decides.
 
 ## Models and caps (2026-09-08)
 
-Sonnet workers were not finishing units in one pass and declined feature-sized items as out of scope. Retries cost more than the bigger model. Every worker is now Opus 5.5 (pinned as `claude-opus-5-5`) while Fable orchestrates; Sonnet only for read-only lookups. Tool-call caps per role keep a confused worker from spending without limit: roughly 60 to build, 30 to fix, 20 to check, 15 to merge. Three Opus workers at a time per run.
+Sonnet workers were not finishing units in one pass and declined feature-sized items as out of scope. Retries cost more than the bigger model. Every worker is now pinned to Opus 5.5 (`claude-opus-5-5`) while the foreman's session runs Fable; Sonnet only for read-only lookups. Tool-call caps per role keep a confused worker from spending without limit: roughly 60 to build, 30 to fix, 20 to check, 15 to merge. Three Opus workers at a time per run, across every tier (`args.maxOpus` changes it).
+
+## One script, launched by name
+
+Every project used to carry its own edited copy of the workflow script, and the copies drifted. There is now one saved workflow (`unit-workflow`, linked into `~/.claude/workflows/`); paths, suite command and trailer arrive as launch `args`. Edited prompts invalidate the resume cache, so a rerun after a prompt change is a new run with `args.only` listing the unit keys that still need work.
 
 ## Worktrees and processes
 

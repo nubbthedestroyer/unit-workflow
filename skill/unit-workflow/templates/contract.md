@@ -3,7 +3,7 @@
 Module `NN-<key>` · status in `plan/ledger.md` · decision D-xx (if any). Report schema: `{status, findings[{path,line,note}], changed[], verified[{cmd,pass}], ledgerUpdated, blockers[]}`.
 
 ## Purpose
-<Michael's words, date, screenshot context.>
+<the owner's words, date, screenshot context.>
 
 ## Owns
 - <file or feature>: <exact behavior>. Keep aria-labels and test ids.

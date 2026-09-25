@@ -19,7 +19,7 @@ const PLAN = A.plan
 const PROJECT = A.project || 'Project build'
 const PLAN_DOCS = A.planDocs || 'contracts/<unit>.md'
 const SUITE_CMD = A.suiteCmd || 'pnpm build, then pnpm test --reporter=dot (tail -60), then pnpm verify'
-const TRAILER = A.trailer || 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
+const TRAILER = A.trailer || 'Co-Authored-By: Claude <noreply@anthropic.com>'
 // args.only reruns a subset of units by key (used after a prompt edit invalidates the resume cache)
 const UNITS = (A.units || []).filter(u => !A.only || A.only.includes(u.key))
 if (!UNITS.length) { log('no units to run'); return { merged: [], results: [], suite: null, review: null } }
