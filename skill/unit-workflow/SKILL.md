@@ -49,6 +49,13 @@ Run: `node ~/.claude/skills/unit-workflow/scripts/status.mjs <plan dir> <session
 - It joins `units.json` with each run's `journal.jsonl` and `agent-*.jsonl` / `.meta.json`: current agent label (port/fix/verify1/verify2/merge/suite/review), model, tool calls so far, elapsed, verdicts recorded, and merge state.
 - Present two tables: **Running / queued** (unit, what, stage, agent calls, elapsed, run id) and **Last completed** (default 5: unit, what, outcome, merged commit, tokens if known). Add one line of next action. Keep prose under the tables to three sentences.
 
+## Update check (every direct invocation)
+When the skill is invoked directly (`/unit-workflow ...`), check for updates before doing anything else; skip it when the skill is auto-routed mid-task.
+1. `git -C <repo> fetch -q origin && git -C <repo> status -sb | head -1` where `<repo>` is the local clone of github.com/nubbthedestroyer/unit-workflow (default `~/Documents/repos/unit-workflow`; skip silently if it does not exist).
+2. `diff -rq <installed skill dir> <repo>/skill/unit-workflow` (ignore the owner-name scrub and the commit trailer).
+3. If origin is ahead of the clone, or the repo copy differs from the installed copy: say so in one line and offer to pull and copy the repo files over the installed ones (never overwrite the private project-defaults section; re-apply it after copying). If the installed copy is ahead, offer to sync it into the repo and push, as in the last sync commit.
+4. No difference: say nothing and continue.
+
 ## Rules that keep it cheap and safe
 - One-off fix agents that work directly on the main checkout must never run concurrently with each other (a `git add -A` sweeps the other agent's files); run them one at a time or give each a worktree. Workflow units are always in worktrees.
 - Fresh agent per tier, own worktree at `<target>/.worktrees/<unit>`; if `node_modules` is missing there the agent runs `pnpm install --prefer-offline` once.
