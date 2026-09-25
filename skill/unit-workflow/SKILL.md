@@ -54,14 +54,21 @@ Run: `node ~/.claude/skills/unit-workflow/scripts/status.mjs <plan dir> <session
 - Fresh agent per tier, own worktree at `<target>/.worktrees/<unit>`; if `node_modules` is missing there the agent runs `pnpm install --prefer-offline` once.
 - Plain quotes only inside prompt strings (backticks and apostrophes broke script parsing).
 - Batch shell, dot reporter, tail -40, never re-read files, skip build until merge.
-- Integration suite runs with the checkout env files (`npx dotenv -e .env.development.local -e .env.local -- pnpm build`), never wrapped in `doppler run` (its dev DB port differs).
+- Integration suite runs with the env files the checkout already carries (pass the exact command as `args.suiteCmd`); do not wrap it in a secrets runner whose dev settings differ from the local database.
 - Nothing external inside a workflow. Stop for the owner only on dropping a feature, public URL/API change, cost, anything external.
 - Schema-only reports: `{status, findings[{path,line,note}], changed[], verified[{cmd,pass}], ledgerUpdated, blockers[]}`.
 - After every merge wave: prune merged worktrees when the owner okays (Vercel CLI hits a 15k-file limit otherwise; use `--archive=tgz`).
 
-## Current project defaults (edit for your project)
-- Target repo: `<absolute path to the repo>`; plan dir: `<repo>/docs/plan` (`units.json`, `ledger.md`, `contracts/`).
-- Launch args (add `units`, and `only` when rerunning a subset): `{"target": "<repo>", "plan": "<repo>/docs/plan", "project": "<one-line project name>", "planDocs": "<docs workers should read>, contracts/<unit>.md", "suiteCmd": "<build, test and gate commands>"}`.
+## Project defaults
+The owner keeps real defaults (paths, suite command, deploy commands) in their private copy of this section. Shape:
+- Target repo and plan dir: `<absolute path to the repo>`, plan at `<repo>/docs/plan/` (`units.json`, `ledger.md`, `contracts/`). No script copy lives in the plan dir: launch the saved `unit-workflow`.
+- Launch args (add `units`, and `only` when rerunning a subset):
+  ```json
+  {"target": "/absolute/path/to/your-repo", "plan": "/absolute/path/to/your-repo/docs/plan",
+   "project": "Your project", "planDocs": "architecture.md, contracts/<unit>.md",
+   "suiteCmd": "pnpm build, then pnpm test --reporter=dot (tail -60), then pnpm verify",
+   "trailer": "Co-Authored-By: Claude <noreply@anthropic.com>", "maxOpus": 3}
+  ```
 - Status: `node ~/.claude/skills/unit-workflow/scripts/status.mjs <repo>/docs/plan <session workflows dir>`.
-- Worktree agents must stop ONLY the dev server they started (kill by the PID they saved, never `pkill -f next` or `killall node`); one-off main-checkout agents run one at a time; always `cd` with an absolute path before touching plan files.
+- Worktree agents must stop ONLY the dev server they started (kill by the PID they saved, never `pkill -f next` or `killall node`, which kills the main checkout server); one-off main-checkout agents run one at a time; always `cd` with an absolute path before touching plan files.
 - Before every production deploy: check and apply pending migrations, then deploy with your platform's command. Write the exact commands here so the foreman never guesses.

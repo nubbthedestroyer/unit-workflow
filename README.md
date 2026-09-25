@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
-[![Workers run on Claude Opus 5.5](https://img.shields.io/badge/workers-Claude%20Opus%205.5-8B5CF6)](skill/unit-workflow/SKILL.md#models-fable-orchestrates-opus-55-everywhere-else)
+[![Fable orchestrates, Opus 5.5 workers](https://img.shields.io/badge/workers-Claude%20Opus%205.5-8B5CF6)](skill/unit-workflow/SKILL.md#models-fable-orchestrates-opus-55-everywhere-else)
 [![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
 [![Status: public beta](https://img.shields.io/badge/status-public%20beta-0EA5E9)](#status)
 [![Last commit](https://img.shields.io/github/last-commit/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/commits/main)
@@ -74,7 +74,7 @@ A contract (the brief a builder reads; nothing else):
 # Contract: Miles chat pane grip and resize
 
 ## Purpose
-Michael 2026-09-10: "The AI chat pane needs a grip pill and the ability to resize it a little bit."
+The owner, 2026-09-10: "The AI chat pane needs a grip pill and the ability to resize it a little bit."
 
 ## Owns
 - components/shell/chat-pane.tsx: a vertical grip pill on the inner edge; pointer-drag resize
@@ -91,14 +91,15 @@ Michael 2026-09-10: "The AI chat pane needs a grip pill and the ability to resiz
 pnpm typecheck; pnpm vitest run test/unit/shell* --reporter=dot; pnpm verify; Playwright as above.
 ```
 
-The launch (one call; the script does the rest in the background):
+The launch (one call to the saved workflow by name; the script does the rest in the background):
 
 ```js
 Workflow({
   name: 'unit-workflow',
   args: { target: '/abs/path/to/repo', plan: '/abs/path/to/repo/docs/plan',
+          suiteCmd: 'pnpm build, then pnpm test --reporter=dot (tail -60), then pnpm verify',
           units: [{ key: '79-chat-pane-resize', risky: false,
-                    contract: 'docs/plan/contracts/79-chat-pane-resize.md',
+                    contract: '79-chat-pane-resize.md',
                     brief: 'Grip pill and drag/keyboard resize for the chat pane, persisted.' }] }
 })
 ```
@@ -135,8 +136,13 @@ Every worker's report is a fixed JSON shape, so the foreman reads fields, not pa
 
 You need Claude Code with the Workflow tool (dynamic workflows), a git repository, and a test command worth trusting.
 
-1. **Install the skill.** Copy `skill/unit-workflow` to `~/.claude/skills/unit-workflow`, then link the workflow so it can be launched by name: `mkdir -p ~/.claude/workflows && ln -s ~/.claude/skills/unit-workflow/templates/unit-workflow.js ~/.claude/workflows/unit-workflow.js`. Claude Code picks the skill up when you say "unit", "status?", or "launch X as a unit".
-2. **Create the plan folder** in your repo:
+1. **Install the skill.** Copy `skill/unit-workflow` to `~/.claude/skills/unit-workflow` (global) or `.claude/skills/unit-workflow` in the repo. Claude Code picks it up when you say "unit", "status?", or "launch X as a unit".
+2. **Save the workflow by name.** Link the template where the Workflow tool looks for saved workflows, so every project launches the same script:
+   ```sh
+   mkdir -p ~/.claude/workflows
+   ln -s ~/.claude/skills/unit-workflow/templates/unit-workflow.js ~/.claude/workflows/unit-workflow.js
+   ```
+3. **Create the plan folder** in your repo (no script copy goes here):
    ```
    docs/plan/
      units.json          {"units":[]}
@@ -144,7 +150,7 @@ You need Claude Code with the Workflow tool (dynamic workflows), a git repositor
      resume.md           where the last session stopped
      contracts/          one file per unit
    ```
-3. **Record your launch args** in the skill's "Current project defaults": `target` (repo root), `plan` (plan folder), and optionally `project`, `planDocs`, `suiteCmd` (your build, test and gate commands) and `trailer`. The script is shared across projects; nothing in it is edited per repo.
+   Put your project settings in the "Project defaults" section of `SKILL.md`: `target`, `plan`, and optionally `project`, `planDocs`, `suiteCmd`, `trailer`, `maxOpus`. The foreman passes them as `args` on every launch.
 4. **Write the first contract** from `skill/unit-workflow/templates/contract.md`, register it in `units.json`, and say "launch it".
 5. **Ask "status?"** whenever you like. Say "resume" in a new session and the foreman reads `resume.md` first.
 
@@ -159,7 +165,7 @@ Everything the foreman does is spelled out in [skill/unit-workflow/SKILL.md](ski
 | [docs/how-it-works.md](docs/how-it-works.md) | The explainer, trunk first, details later. Start here if you are new. |
 | [docs/rules.md](docs/rules.md) | Every rule the workflow runs on, with the incident that produced it. |
 | [docs/diagrams/](docs/diagrams/) | The diagram above as editable draw.io, PNG, and the Python generator that draws it. |
-| [skill/unit-workflow/](skill/unit-workflow/) | The Claude Code skill: SKILL.md, the workflow script template, the contract template, the status command. |
+| [skill/unit-workflow/](skill/unit-workflow/) | The Claude Code skill: SKILL.md, the saved workflow script, the contract template, the status command. |
 | [examples/contracts/](examples/contracts/) | Three real contracts from production units: a feature, a numbers-heavy estimate, an external integration. |
 | [examples/units.json](examples/units.json) | A real registry slice showing the lifecycle fields. |
 
@@ -167,9 +173,9 @@ Everything the foreman does is spelled out in [skill/unit-workflow/SKILL.md](ski
 
 ## Under the hood
 
-The engine is a Claude Code **dynamic workflow**: a small JavaScript script that orchestrates many agents deterministically. `agent()` spawns a worker with a prompt, a model, a tool-call cap, worktree isolation, and a JSON schema its report must satisfy. `pipeline()` pushes each unit through build → check → fix → second check independently, so one unit can be merging while another is still being checked. Merges and the integration pass run after a barrier, one at a time. Every run has an id and a journal of what each agent returned; a stopped or edited run resumes from cache.
+The engine is a Claude Code **dynamic workflow**: a small JavaScript script that orchestrates many agents deterministically. `agent()` spawns a worker with a prompt, a model, a tool-call cap, worktree isolation, and a JSON schema its report must satisfy. `pipeline()` pushes each unit through build → check → fix → second check → merge independently: each unit merges as soon as it clears, behind a lock so only one merge runs at a time, while other units are still being checked. One integration pass runs after the last merge. The same script serves every project; paths and commands arrive as launch `args`, and `args.only` reruns a subset of units by key. Every run has an id and a journal of what each agent returned; a stopped or edited run resumes from cache.
 
-Models: the orchestrator runs on Claude Fable; every worker runs on Claude Opus 5.5 (pinned as `claude-opus-5-5`), three at a time per run, with tool-call caps per role (roughly 60 to build, 30 to fix, 20 to check, 15 to merge). Read-only lookups may use Sonnet.
+Models: the foreman (your main session) runs on Claude Fable; every worker the script spawns is pinned to Claude Opus 5.5 (`claude-opus-5-5`), three at a time per run across all tiers (`args.maxOpus` changes it), with tool-call caps per role (roughly 60 to build, 30 to fix, 20 to check, 15 to merge). Read-only lookups may use Sonnet.
 
 Cost: a feature-sized unit spends 400k to 1.1M tokens across its six to ten workers. That is the price of isolation and independent verification. It is cheaper than the long chat that rereads the codebase twice and still ships something half-checked.
 
@@ -185,7 +191,7 @@ Cost: a feature-sized unit spends 400k to 1.1M tokens across its six to ten work
 
 ## Status
 
-Public beta. The skill, script template, and rules are lifted from a production project where they run daily; the project-specific defaults live in one clearly marked section of `SKILL.md` and two constants at the top of the script template, so adopting it is an edit, not a rewrite. Issues and questions are welcome.
+Public beta. The skill, script template, and rules are lifted from a production project where they run daily; the project-specific defaults live in one clearly marked section of `SKILL.md` and reach the script as launch `args`, so adopting it is an edit, not a rewrite. Issues and questions are welcome.
 
 ## License
 
