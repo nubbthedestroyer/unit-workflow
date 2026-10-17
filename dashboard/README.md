@@ -42,6 +42,8 @@ Open http://localhost:3040.
 
 **Agent logs.** Click any agent in the details panel to open its full log over the page: the brief it was given, everything it said, every command, read and edit with its output, and its final report. A running agent's log streams in every 2 seconds and follows the newest step. Failed commands are marked in red and open by default.
 
+![An agent's log streaming in](../docs/dashboard/agent-log.gif)
+
 ![Agent log: a checker's failing test run and its refuted report](../docs/dashboard/agent-log.png)
 
 ## Reading a card

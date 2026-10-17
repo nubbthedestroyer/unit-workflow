@@ -1,6 +1,8 @@
+<div align="center">
+
 # unit-workflow
 
-**Ship real software with a crew of AI workers you never have to babysit.**
+### Ship real software with a crew of AI workers you never have to babysit.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
@@ -9,25 +11,60 @@
 [![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
 [![Status: public beta](https://img.shields.io/badge/status-public%20beta-0EA5E9)](#status)
 [![Last commit](https://img.shields.io/github/last-commit/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/commits/main)
-[![Issues](https://img.shields.io/github/issues/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/issues)
+
+<img src="docs/dashboard/live-flowchart.gif" alt="Live dashboard: units flow through build, check, fix, second check and merge while queued units wait on their dependencies" width="100%">
+
+<sub>A simulated build in the live dashboard, sped up. Builders, checkers, fixers and mergers pick up each unit; arrows show who is waiting on whom; everything lands in <code>main</code>.</sub>
+
+**[Try the demo](#try-the-dashboard-in-30-seconds)** · **[Quick start](#quick-start)** · **[How it works](docs/how-it-works.md)** · **[The rules](docs/rules.md)**
+
+</div>
+
+<br>
 
 unit-workflow is a way of running [Claude Code](https://claude.com/claude-code) on a large codebase where every piece of work is a small, written **unit**: one brief, one fresh worker in its own copy of the code, one independent checker, one merge, one full test pass, all in the background while you keep talking about the next thing. Nobody checks their own work, and everything is written down.
 
 It was built while replacing a production SaaS platform end to end. In its first week it shipped **47 units** (features, fixes, migrations, an infrastructure cutover) with the founder reviewing outcomes, not diffs.
 
-![The unit workflow: people on the left, the eight steps of one unit across the middle, the files on disk that hold the truth along the bottom](docs/diagrams/unit-workflow.png)
+## See every agent, live
 
-### Watch the crew work
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/dashboard/agent-log.gif" alt="An agent's log streaming in: each command, edit and output, then its final report">
+<br><b>Watch any agent think.</b><br><sub>Click an agent for its full log: every command, read and edit with its output, streaming in, down to the report it hands back.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="docs/dashboard/board.png" alt="Board view: one column per tier">
+<br><b>Board.</b><br><sub>One column per tier, from Queued to Integration. Each card sits where its agent is working right now.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/dashboard/agent-log.png" alt="A checker's failing test run and its refuted verdict">
+<br><b>Nobody grades their own homework.</b><br><sub>A checker runs the proofs, finds two failing tests, and refutes. A fixer gets exactly those findings.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="docs/dashboard/details.png" alt="Unit details with agents, verdicts and dependencies">
+<br><b>Every unit, explained.</b><br><sub>Agents, models, tool calls, tokens, verdicts, findings, and what the unit blocks.</sub>
+</td>
+</tr>
+</table>
 
-The repo ships a live dashboard. Every unit is a card on a flowchart of your plan; the cards change color as builders, checkers, fixers and mergers pick them up, and the arrows show who is waiting on whom. Click any agent to watch its log stream in.
+<p align="center"><img src="docs/dashboard/flowchart-portrait.png" alt="The flowchart on a portrait monitor" width="32%"><br><sub>The flowchart rearranges itself for the screen it is on: here, a portrait monitor beside the editor.</sub></p>
 
-![Live dashboard: units flow through build, check, fix, second check and merge while queued units wait on their dependencies](docs/dashboard/live-flowchart.gif)
+### Try the dashboard in 30 seconds
 
 ```bash
-cd dashboard && pnpm install && pnpm demo   # simulated build on a loop, http://localhost:3041
+git clone https://github.com/nubbthedestroyer/unit-workflow
+cd unit-workflow/dashboard && pnpm install && pnpm demo   # http://localhost:3041
 ```
 
-More views and settings in [dashboard/README.md](dashboard/README.md).
+The demo plays a simulated build on a loop. Point it at your own runs with `pnpm dev`; it reads the files unit-workflow already writes, so there is nothing to wire up. More in [dashboard/README.md](dashboard/README.md).
+
+## How a unit works
+
+![The unit workflow: people on the left, the eight steps of one unit across the middle, the files on disk that hold the truth along the bottom](docs/diagrams/unit-workflow.png)
 
 ---
 
@@ -79,20 +116,7 @@ The plain-language walk-through, written for someone who has never touched AI to
 
 ---
 
-## What it looks like
-
-<table>
-<tr>
-<td width="62%"><img src="docs/dashboard/board.png" alt="Board view: one column per tier"><br><sub><b>Board.</b> One column per tier; each card sits where its agent is working.</sub></td>
-<td width="38%" rowspan="2"><img src="docs/dashboard/flowchart-portrait.png" alt="Flowchart on a portrait monitor"><br><sub><b>Flowchart.</b> Turns to fit a portrait monitor.</sub></td>
-</tr>
-<tr>
-<td><img src="docs/dashboard/details.png" alt="Unit details with agents and findings"><br><sub><b>Details.</b> Every agent, verdict, finding and dependency for a unit.</sub></td>
-</tr>
-<tr>
-<td colspan="2"><img src="docs/dashboard/agent-log.png" alt="Full log of one agent: commands, outputs and its final report"><br><sub><b>Agent logs.</b> Click any agent for its full, live log: every command, edit and output, down to the report it handed back.</sub></td>
-</tr>
-</table>
+## What it looks like on disk
 
 A contract (the brief a builder reads; nothing else):
 
