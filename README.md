@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
 [![Fable orchestrates, Opus 5.5 workers](https://img.shields.io/badge/workers-Claude%20Opus%205.5-8B5CF6)](skill/unit-workflow/SKILL.md#models-fable-orchestrates-opus-55-everywhere-else)
+[![Live dashboard included](https://img.shields.io/badge/dashboard-live%20flowchart-38BDF8)](dashboard/)
 [![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
 [![Status: public beta](https://img.shields.io/badge/status-public%20beta-0EA5E9)](#status)
 [![Last commit](https://img.shields.io/github/last-commit/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/commits/main)
@@ -15,6 +16,18 @@ unit-workflow is a way of running [Claude Code](https://claude.com/claude-code) 
 It was built while replacing a production SaaS platform end to end. In its first week it shipped **47 units** (features, fixes, migrations, an infrastructure cutover) with the founder reviewing outcomes, not diffs.
 
 ![The unit workflow: people on the left, the eight steps of one unit across the middle, the files on disk that hold the truth along the bottom](docs/diagrams/unit-workflow.png)
+
+### Watch the crew work
+
+The repo ships a live dashboard. Every unit is a card on a flowchart of your plan; the cards change color as builders, checkers, fixers and mergers pick them up, and the arrows show who is waiting on whom.
+
+![Live dashboard: units flow through build, check, fix, second check and merge while queued units wait on their dependencies](docs/dashboard/live-flowchart.gif)
+
+```bash
+cd dashboard && pnpm install && pnpm demo   # simulated build on a loop, http://localhost:3041
+```
+
+More views and settings in [dashboard/README.md](dashboard/README.md).
 
 ---
 
@@ -60,13 +73,23 @@ flowchart LR
 7. **Inspector.** Runs the whole build and test suite on `main` and explains every failure: new, or old noise?
 8. **Ship.** Migrations applied, deploy runs, the ledger records the outcome.
 
-Ask **"status?"** at any moment and get a table of every unit, its stage, and how long it has been there.
+Ask **"status?"** at any moment and get a table of every unit, its stage, and how long it has been there. Or leave the [dashboard](dashboard/) open on a second monitor.
 
 The plain-language walk-through, written for someone who has never touched AI tooling, is in [docs/how-it-works.md](docs/how-it-works.md).
 
 ---
 
 ## What it looks like
+
+<table>
+<tr>
+<td width="62%"><img src="docs/dashboard/board.png" alt="Board view: one column per tier"><br><sub><b>Board.</b> One column per tier; each card sits where its agent is working.</sub></td>
+<td width="38%" rowspan="2"><img src="docs/dashboard/flowchart-portrait.png" alt="Flowchart on a portrait monitor"><br><sub><b>Flowchart.</b> Turns to fit a portrait monitor.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/dashboard/details.png" alt="Unit details with agents and findings"><br><sub><b>Details.</b> Every agent, verdict, finding and dependency for a unit.</sub></td>
+</tr>
+</table>
 
 A contract (the brief a builder reads; nothing else):
 
@@ -104,7 +127,7 @@ Workflow({
 })
 ```
 
-The status table, ten minutes later:
+The status table, ten minutes later (or the same thing, live, in the [dashboard](dashboard/)):
 
 ```
 RUNNING / QUEUED (1)
@@ -165,6 +188,7 @@ Everything the foreman does is spelled out in [skill/unit-workflow/SKILL.md](ski
 | [docs/how-it-works.md](docs/how-it-works.md) | The explainer, trunk first, details later. Start here if you are new. |
 | [docs/rules.md](docs/rules.md) | Every rule the workflow runs on, with the incident that produced it. |
 | [docs/diagrams/](docs/diagrams/) | The diagram above as editable draw.io, PNG, and the Python generator that draws it. |
+| [dashboard/](dashboard/) | The live dashboard: a flowchart and a board of every unit, refreshed every 3 seconds from the files on disk. `pnpm demo` runs a simulated build. |
 | [skill/unit-workflow/](skill/unit-workflow/) | The Claude Code skill: SKILL.md, the saved workflow script, the contract template, the status command. |
 | [examples/contracts/](examples/contracts/) | Three real contracts from production units: a feature, a numbers-heavy estimate, an external integration. |
 | [examples/units.json](examples/units.json) | A real registry slice showing the lifecycle fields. |
