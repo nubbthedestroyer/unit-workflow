@@ -4,7 +4,7 @@
 
 ### Build small. Check twice. Merge once.
 
-A unit workflow for Claude Code: every change is built in isolation, checked by an agent that did not build it, and merged only once it passes.
+unit-workflow is an open-source workflow for builders running Claude Code on codebases too big for one conversation. It helps you ship verified changes by breaking work into units that are built in isolation, checked by an agent that did not build them, fixed at most twice, and merged one at a time, with a live dashboard that shows every agent's log as it runs. MIT licensed.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
@@ -24,7 +24,7 @@ A unit workflow for Claude Code: every change is built in isolation, checked by 
 
 <br>
 
-unit-workflow is a way of running [Claude Code](https://claude.com/claude-code) on a codebase too big for one conversation. Every piece of work becomes a **unit**: a one-page brief, a fresh worker in its own copy of the code, an independent checker, a merge, and a full test pass. Units run in the background, several at a time, while you keep talking about the next thing. No worker checks its own work, and every outcome is written to disk.
+Every piece of work becomes a **unit**: a one-page brief, a fresh agent in its own copy of the code, an independent checker, a merge, and a full test pass. Units run in the background, several at a time, while you keep talking to [Claude Code](https://claude.com/claude-code) about the next thing. No agent checks its own work, and every outcome is written to disk.
 
 It was built while replacing a production SaaS platform end to end. In its first week it shipped **47 units** (features, fixes, migrations, an infrastructure cutover) with the founder reviewing outcomes, not diffs.
 
