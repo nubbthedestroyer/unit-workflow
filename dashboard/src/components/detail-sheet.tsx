@@ -8,14 +8,23 @@ import { cn } from "@/lib/utils"
 import { SEG, STATUS, ago, dur, shortModel } from "@/lib/status"
 import type { AgentView, RunView, UnitView } from "@/lib/types"
 import { SegmentBar } from "./nodes"
+import { LogModal } from "./log-modal"
+import { useState } from "react"
 
 const VERDICT_CLS: Record<string, string> = {
   verified: "text-emerald-300", done: "text-emerald-300", refuted: "text-amber-300", partial: "text-amber-300", blocked: "text-red-300",
 }
 
-function AgentRow({ a, now }: { a: AgentView; now: number }) {
+function AgentRow({ a, now, onOpen }: { a: AgentView; now: number; onOpen: (a: AgentView) => void }) {
   return (
-    <li className="rounded-md border border-white/5 bg-zinc-900/60 px-3 py-2">
+    <li
+      role="button"
+      tabIndex={0}
+      title="Open the full log"
+      onClick={() => onOpen(a)}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onOpen(a)}
+      className="cursor-pointer rounded-md border border-white/5 bg-zinc-900/60 px-3 py-2 transition-colors hover:border-sky-500/40 hover:bg-zinc-900"
+    >
       <div className="flex items-center gap-2 text-xs">
         {a.state === "running" ? <Loader2 className="size-3 animate-spin text-sky-300" />
           : <span className={cn("size-2 rounded-full", a.state === "failed" ? "bg-red-400" : "bg-emerald-400")} />}
@@ -60,7 +69,14 @@ export function DetailSheet({ unit, run, byKey, runs, now, onSelect, onClose }: 
 }) {
   const unblocks = unit ? Object.values(byKey).filter((u) => u.deps.includes(unit.key)) : []
   const unitRun = unit ? runs.find((r) => r.runId === unit.runId) : null
+  // The log modal follows the live agent object, so its state and counts update with each poll
+  const [log, setLog] = useState<{ id: string; runId: string } | null>(null)
+  const ctxRun = unit?.runId || run?.runId || null
+  const openLog = (a: AgentView) => ctxRun && setLog({ id: a.id, runId: ctxRun })
+  const pool = [...(unit?.agents || []), ...runs.flatMap((r) => [r.suite, r.review])].filter(Boolean) as AgentView[]
+  const logAgent = log ? pool.find((a) => a.id === log.id) || null : null
   return (
+    <>
     <Sheet open={!!(unit || run)} onOpenChange={(o) => !o && onClose()} modal={false}>
       <SheetContent className="w-[440px] gap-0 border-white/10 bg-zinc-950 p-0 sm:max-w-[440px]" onInteractOutside={(e) => e.preventDefault()}>
         <ScrollArea className="h-full">
@@ -107,11 +123,11 @@ export function DetailSheet({ unit, run, byKey, runs, now, onSelect, onClose }: 
                   )}
                 </div>
                 {unit.agents.length ? (
-                  <ol className="space-y-1.5">{unit.agents.map((a) => <AgentRow key={a.id} a={a} now={now} />)}</ol>
+                  <ol className="space-y-1.5">{unit.agents.map((a) => <AgentRow key={a.id} a={a} now={now} onOpen={openLog} />)}</ol>
                 ) : (
                   <p className="text-xs text-zinc-500">No agent history on disk for this unit.</p>
                 )}
-                {unitRun?.suite && <ol className="mt-1.5 space-y-1.5"><AgentRow a={unitRun.suite} now={now} />{unitRun.review && <AgentRow a={unitRun.review} now={now} />}</ol>}
+                {unitRun?.suite && <ol className="mt-1.5 space-y-1.5"><AgentRow a={unitRun.suite} now={now} onOpen={openLog} />{unitRun.review && <AgentRow a={unitRun.review} now={now} onOpen={openLog} />}</ol>}
               </div>
               <p className="font-mono text-[11px] text-zinc-600">
                 {unit.contract && <>contracts/{unit.contract} · </>}
@@ -132,8 +148,8 @@ export function DetailSheet({ unit, run, byKey, runs, now, onSelect, onClose }: 
               </div>
               {(run.suite || run.review) && (
                 <ol className="space-y-1.5">
-                  {run.suite && <AgentRow a={run.suite} now={now} />}
-                  {run.review && <AgentRow a={run.review} now={now} />}
+                  {run.suite && <AgentRow a={run.suite} now={now} onOpen={openLog} />}
+                  {run.review && <AgentRow a={run.review} now={now} onOpen={openLog} />}
                 </ol>
               )}
               {run.logs.length > 0 && (
@@ -147,5 +163,7 @@ export function DetailSheet({ unit, run, byKey, runs, now, onSelect, onClose }: 
         </ScrollArea>
       </SheetContent>
     </Sheet>
+    <LogModal agent={logAgent} runId={log?.runId || null} onClose={() => setLog(null)} />
+    </>
   )
 }

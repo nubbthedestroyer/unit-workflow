@@ -29,7 +29,7 @@ function cached<T>(file: string, read: (f: string) => T): T | null {
   } catch { return null }
 }
 const readJson = (f: string) => cached(f, (p) => JSON.parse(fs.readFileSync(p, "utf8")))
-const readJsonl = (f: string) => cached(f, (p) => fs.readFileSync(p, "utf8").split("\n").filter(Boolean)
+export const readJsonl = (f: string) => cached(f, (p) => fs.readFileSync(p, "utf8").split("\n").filter(Boolean)
   .map((l) => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean)) as any[] | null
 const countToolCalls = (f: string) => cached(f, (p) => (fs.readFileSync(p, "utf8").match(/"type":"tool_use"/g) || []).length)
 const ls = (d: string) => { try { return fs.readdirSync(d) } catch { return [] } }
@@ -156,6 +156,16 @@ export function readRun(runId: string, summaryFile: string | null, dir: string |
   }
 }
 
+// runId -> its subagents folder, refreshed on every scan; used to find one agent's transcript
+const runDirs = new Map<string, string>()
+
+export function agentFile(runId: string, agentId: string): string | null {
+  if (!/^wf_[\w-]+$/.test(runId) || !/^[\w-]+$/.test(agentId)) return null
+  if (!runDirs.has(runId)) scanRuns()
+  const dir = runDirs.get(runId)
+  return dir ? path.join(dir, `agent-${agentId}.jsonl`) : null
+}
+
 function scanRuns(): RawRun[] {
   const found = new Map<string, { summary: string | null; dir: string | null }>()
   for (const slug of ls(PROJECTS)) {
@@ -170,6 +180,7 @@ function scanRuns(): RawRun[] {
       }
     }
   }
+  for (const [id, f] of found) if (f.dir) runDirs.set(id, f.dir)
   return [...found].map(([id, f]) => readRun(id, f.summary, f.dir))
 }
 

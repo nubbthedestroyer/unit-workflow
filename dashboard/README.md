@@ -40,6 +40,10 @@ Open http://localhost:3040.
 
 ![Unit details](../docs/dashboard/details.png)
 
+**Agent logs.** Click any agent in the details panel to open its full log over the page: the brief it was given, everything it said, every command, read and edit with its output, and its final report. A running agent's log streams in every 2 seconds and follows the newest step. Failed commands are marked in red and open by default.
+
+![Agent log: a checker's failing test run and its refuted report](../docs/dashboard/agent-log.png)
+
 ## Reading a card
 
 - **The five-cell bar** is the unit's path: Port, T1, T2, Merge, Int. Blue stripes are running, green is done, amber stripes are a fix round (the badge counts rounds), red failed, hatched skipped (Tier 2 for a unit that is not risky).
@@ -51,6 +55,7 @@ Open http://localhost:3040.
 
 - `units.json` in `~/Documents/repos/*/plan`, `~/Documents/repos/*/docs/plan`, `~/*/plan`, any `args.plan` from a past run, and any folder in `PLAN_DIRS`.
 - Runs in `~/.claude/projects/*/*/workflows/wf_*.json` (written when a run ends) and `~/.claude/projects/*/*/subagents/workflows/wf_*/journal.jsonl` (live agent starts and results).
+- Agent logs in `agent-<id>.jsonl` next to each run's journal.
 
 | Setting | Default | What it does |
 |---|---|---|

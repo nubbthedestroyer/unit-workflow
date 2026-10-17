@@ -83,3 +83,16 @@ export interface StateResponse {
   units: UnitView[]
   runs: RunView[]
 }
+
+export interface LogEvent {
+  i: number
+  t: number | null
+  kind: "prompt" | "text" | "tool" | "report"
+  tool?: string
+  title: string
+  detail?: string
+  output?: string
+  error?: boolean
+  pending?: boolean
+  ms?: number
+}

@@ -19,7 +19,7 @@ It was built while replacing a production SaaS platform end to end. In its first
 
 ### Watch the crew work
 
-The repo ships a live dashboard. Every unit is a card on a flowchart of your plan; the cards change color as builders, checkers, fixers and mergers pick them up, and the arrows show who is waiting on whom.
+The repo ships a live dashboard. Every unit is a card on a flowchart of your plan; the cards change color as builders, checkers, fixers and mergers pick them up, and the arrows show who is waiting on whom. Click any agent to watch its log stream in.
 
 ![Live dashboard: units flow through build, check, fix, second check and merge while queued units wait on their dependencies](docs/dashboard/live-flowchart.gif)
 
@@ -88,6 +88,9 @@ The plain-language walk-through, written for someone who has never touched AI to
 </tr>
 <tr>
 <td><img src="docs/dashboard/details.png" alt="Unit details with agents and findings"><br><sub><b>Details.</b> Every agent, verdict, finding and dependency for a unit.</sub></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/dashboard/agent-log.png" alt="Full log of one agent: commands, outputs and its final report"><br><sub><b>Agent logs.</b> Click any agent for its full, live log: every command, edit and output, down to the report it handed back.</sub></td>
 </tr>
 </table>
 
