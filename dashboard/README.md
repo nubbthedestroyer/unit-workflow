@@ -1,6 +1,6 @@
 # unit-workflow dashboard
 
-**Watch your AI crew work.** A live, local map of every unit: what is being built, what is being checked, what is waiting on what, and what just merged.
+**Watch every unit move through the stages.** A live, local map of your plan: what is being built, what is being checked, what is waiting on what, and what just merged.
 
 ![The flowchart view, live: units move through Port, Tier 1, Tier 2, Merge and Integration while dependency arrows show who is waiting on whom](../docs/dashboard/live-flowchart.gif)
 

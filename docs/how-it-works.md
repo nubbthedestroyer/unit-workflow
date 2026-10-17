@@ -1,12 +1,12 @@
 # How it works
 
-*How a production app gets built: one idea at a time, by a crew of AI workers, with a foreman who never touches the tools.*
+*How a production app gets built: one unit at a time, through fixed stages of building and checking, with a foreman who never touches the tools.*
 
 ---
 
 ## The one-paragraph version
 
-You describe something you want. It becomes a **unit**: a single, well-bounded piece of work with a written brief. A fresh AI worker builds it in its own copy of the code. A second AI worker checks it. If anything is wrong, a third fixes it and the checker looks again. Only when it passes does it get merged into the real app, where a final check runs the whole test suite. All of this happens in the background while you keep talking about the next thing. Every step is written down, so anyone can see what happened and why.
+You describe something you want. It becomes a **unit**: a single, well-bounded piece of work with a written brief. A fresh agent builds it in its own copy of the code. A second agent checks it. If anything is wrong, a third fixes it and the checker looks again. Only when it passes does it get merged into the real app, where a final check runs the whole test suite. All of this happens in the background while you keep talking about the next thing. Every step is written down, so anyone can see what happened and why.
 
 That is the whole idea. Everything below is detail.
 
@@ -29,11 +29,11 @@ The unit workflow fixes that with four rules:
 
 ## The cast
 
-It helps to think of it as a small construction crew.
+Three kinds of participant, and only one of them is a person.
 
 - **You** are the owner. You say what you want and answer the questions only you can answer (should we drop a feature, spend money, change a public URL).
 - **The foreman** is the assistant you talk to. The foreman writes briefs, hands out work, reads reports, and keeps the ledger. The foreman deliberately does not read source code or run builds. That keeps its attention on the plan, not the plumbing.
-- **The crew** are the AI workers. Each one exists for one job and then goes away:
+- **The stage agents** do the work. Each one exists for one stage of one unit and then goes away:
   - the **builder** writes the code,
   - the **checker** tries to prove it works (and looks for what the builder missed),
   - the **fixer** repairs what the checker found,

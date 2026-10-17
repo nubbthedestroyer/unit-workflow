@@ -2,7 +2,9 @@
 
 # unit-workflow
 
-### Ship real software with a crew of AI workers you never have to babysit.
+### Build small. Check twice. Merge once.
+
+A unit workflow for Claude Code: every change is built in isolation, checked by an agent that did not build it, and merged only once it passes.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
@@ -81,7 +83,7 @@ unit-workflow is four rules, one for each problem:
 
 ## The life of a unit
 
-You say what you want. The foreman (the assistant you talk to) turns it into a unit and hands it to the crew.
+You say what you want. The foreman (the assistant you talk to) turns it into a unit and starts it through the stages.
 
 ![The unit workflow: people on the left, the eight steps of one unit across the middle, the files on disk that hold the truth along the bottom](docs/diagrams/unit-workflow.png)
 
