@@ -12,7 +12,7 @@ import type { RunView, StateResponse, UnitStatus, UnitView } from "@/lib/types"
 import { NODE_H, NODE_W, nodeTypes } from "./nodes"
 import { DetailSheet } from "./detail-sheet"
 import { ZoomPanel } from "./zoom-panel"
-import { buildFlow, dirFor, edgeStyle, flowUnits, layoutStructure, structureKey } from "./flow-layout"
+import { buildFlow, edgeStyle, flowUnits, layoutStructure, structureKey } from "./flow-layout"
 
 const POLL_MS = 3000
 const COL_W = NODE_W + 40
@@ -196,17 +196,16 @@ export function Dashboard() {
   const structKey = flowSet ? structureKey(flowSet.units) : ""
   const flowUnitsRef = useRef<UnitView[]>([])
   if (flowSet) flowUnitsRef.current = flowSet.units
-  const positions = useMemo(() => layoutStructure(flowUnitsRef.current, aspect), [structKey, aspect]) // eslint-disable-line react-hooks/exhaustive-deps
-  const dir = dirFor(aspect)
+  const flowLayout = useMemo(() => layoutStructure(flowUnitsRef.current, aspect), [structKey, aspect]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const graph = useMemo(() => {
     if (!data) return null
     if (view === "flow" && flowSet) {
-      const f = buildFlow(data, flowSet.units, flowSet.hidden, positions, dir, flashes, selected, () => setShowAll(true))
+      const f = buildFlow(data, flowSet.units, flowSet.hidden, flowLayout, flashes, selected, () => setShowAll(true))
       return { ...f, byKey: Object.fromEntries(data.units.map((u) => [u.key, u])) }
     }
     return layout(data, showAll, data.generatedAt, flashes, selected, () => setShowAll(true))
-  }, [data, showAll, flashes, selected, view, flowSet, positions, dir])
+  }, [data, showAll, flashes, selected, view, flowSet, flowLayout])
   const counts = useMemo(() => {
     const c: Partial<Record<UnitStatus, number>> = {}
     for (const u of data?.units || []) c[u.status] = (c[u.status] || 0) + 1
