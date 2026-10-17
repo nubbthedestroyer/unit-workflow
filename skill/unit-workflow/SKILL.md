@@ -3,9 +3,10 @@ name: unit-workflow
 description: >-
   Multi-tier unit orchestration for large builds: contracts, per-unit worktrees,
   Opus 5.5 port/fix/verify/merge tiers via the Workflow tool, a units.json registry, a ledger on
-  disk, and a status command that shows every running unit's stage plus the last completed
-  ones. Use whenever the owner says "use a workflow", "unit", "status?", "where are we",
-  "summarize running units", "launch <thing> as a unit", or asks to queue work behind another unit.
+  disk, a status command that shows every running unit's stage plus the last completed
+  ones, and a live web dashboard (board and flowchart views, agent logs). Use whenever the owner
+  says "use a workflow", "unit", "status?", "where are we", "summarize running units",
+  "launch <thing> as a unit", "dashboard", or asks to queue work behind another unit.
 ---
 
 # Unit workflow
@@ -31,10 +32,11 @@ Max 3 Opus agents in parallel per run across every tier (the template routes all
 1. **Number + contract.** Next NN from the ledger. Write `plan/contracts/NN-<key>.md` from `templates/contract.md`: purpose in the owner's words, Owns, reference slice (path:line), dependencies, pre-assigned migration numbers, acceptance commands. Workers never explore; the contract is the brief.
 2. **Conflict check.** If the unit edits files another running unit owns, queue it: `queuedBehind: ["NN"]`. Otherwise launch now (parallel is the default).
 3. **Register** in `plan/units.json` (see schema below), add the ledger row, note the run id in `plan/resume.md`, commit `plan/`.
-4. **Launch** the saved workflow by name: `Workflow({name: 'unit-workflow', args: {target, plan, units:[{key, risky, contract, brief}], ...project defaults}})`. It is `templates/unit-workflow.js`, linked into `~/.claude/workflows/`; never copy it per project. Project settings (`project`, `planDocs`, `suiteCmd`, `trailer`, `maxOpus`) go in `args`. One run can carry several disjoint units.
+4. **Launch** the saved workflow by name: `Workflow({name: 'unit-workflow', args: {target, plan, units:[{key, risky, contract, brief}], ...project defaults}})`. It is `templates/unit-workflow.js`, linked into `~/.claude/workflows/`; never copy it per project. Project settings (`project`, `planDocs`, `suiteCmd`, `trailer`, `maxOpus`) go in `args`. One run can carry several disjoint units. Git and tooling options: `baseBranch` (default `main`; units fork from and merge into it), `remote` (default `origin`), `push: false` (local only: no pull, no push; use it for repos you cannot push to or where the base is a feature branch), `pm` (`pnpm` default, `npm`, `yarn`), and `installCmd` / `typecheckCmd` / `verifyCmd` to override the pm defaults.
 5. **Tiers** run inside the script, per unit with no barrier: port -> verify1 (fix -> verify1, max 2 rounds) -> verify2 if risky -> merge. Each unit merges as soon as it clears, one merge at a time; the suite + review run once after the last merge.
 6. **On completion** update `units.json` (`status`, `mergedAt`, `outcome`), the ledger phase log, then launch anything queued behind it, then deploy if the owner expects it (`vercel deploy --prod --yes --archive=tgz` from the target repo).
-7. Spend-limit errors kill agents silently: resume with `resumeFromRunId`; edited prompts invalidate the cached prefix, so new prompts mean a new run with `args.only: ["<key>", ...]` (same `units` list; only those keys run).
+7. After editing `templates/unit-workflow.js` mid-session, launch with `Workflow({scriptPath: '~/.claude/skills/unit-workflow/templates/unit-workflow.js', args})` rather than `{name: 'unit-workflow'}`: a by-name launch can run the copy cached at session start, so new args are silently ignored.
+8. Spend-limit errors kill agents silently: resume with `resumeFromRunId`; edited prompts invalidate the cached prefix, so new prompts mean a new run with `args.only: ["<key>", ...]` (same `units` list; only those keys run).
 
 ## units.json schema
 ```json
@@ -48,6 +50,14 @@ Run: `node ~/.claude/skills/unit-workflow/scripts/status.mjs <plan dir> <session
 - workflows dir = `~/.claude/projects/<project-slug>/<session-id>/subagents/workflows` (the Workflow tool result prints it).
 - It joins `units.json` with each run's `journal.jsonl` and `agent-*.jsonl` / `.meta.json`: current agent label (port/fix/verify1/verify2/merge/suite/review), model, tool calls so far, elapsed, verdicts recorded, and merge state.
 - Present two tables: **Running / queued** (unit, what, stage, agent calls, elapsed, run id) and **Last completed** (default 5: unit, what, outcome, merged commit, tokens if known). Add one line of next action. Keep prose under the tables to three sentences.
+
+## Dashboard (when the owner says "dashboard", "launch the dashboard", "show the board")
+The live dashboard is a Next.js app in the public repo at `dashboard/`. It's read-only: it finds `units.json` plan dirs and the Workflow run journals on its own, polls every 3 s, and gives Board and Flowchart views, per-unit details and live agent logs.
+- **Source:** a detached worktree of `origin/main` at `~/Documents/repos/unit-workflow-dashboard` (`git -C ~/Documents/repos/unit-workflow worktree add --detach ~/Documents/repos/unit-workflow-dashboard origin/main`). Use a worktree so a diverged local `main` is never touched. To refresh: `git -C <worktree> checkout --detach origin/main` after a fetch.
+- **Install once:** `cd <worktree>/dashboard && npx -y pnpm@9 install --frozen-lockfile` (pnpm may not be installed; npx works).
+- **Run:** port 3040, with `PLAN_DIRS=<plan dir>` to pin the current project's plan (it also auto-discovers past `args.plan` dirs). In the desktop app, start it through `.claude/launch.json` and the browser pane (`preview_start`), not a background shell: `{"name":"unit-workflow-dashboard","runtimeExecutable":"sh","runtimeArgs":["-c","cd <worktree>/dashboard && PLAN_DIRS=<plan> npx -y pnpm@9 dev -p 3040"],"port":3040}`. The first start takes about 30 to 60 s.
+- **Demo without real units:** `npx -y pnpm@9 demo` on :3041.
+- Keep `units.json` accurate (`runId`, `status`, `queuedBehind`): the dashboard flags it when the registry disagrees with a run.
 
 ## Update check (every direct invocation)
 When the skill is invoked directly (`/unit-workflow ...`), check for updates before doing anything else; skip it when the skill is auto-routed mid-task.
