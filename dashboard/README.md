@@ -1,10 +1,10 @@
 # unit-workflow dashboard
 
-**Watch your AI crew work.** A live, local map of every unit: what is building, what is being checked, what is waiting on what, and what just merged.
+**Watch your AI crew work.** A live, local map of every unit: what is being built, what is being checked, what is waiting on what, and what just merged.
 
 ![The flowchart view, live: units move through Port, Tier 1, Tier 2, Merge and Integration while dependency arrows show who is waiting on whom](../docs/dashboard/live-flowchart.gif)
 
-It reads the files unit-workflow already writes (`units.json` and the Workflow tool's run journals), so there is nothing to wire up. It polls every 3 seconds and never writes anything.
+It reads the files unit-workflow already writes (`units.json` and the Workflow tool's run journals), so there is nothing to connect. It checks for changes every 3 seconds and never writes anything.
 
 ## Try it in 30 seconds
 
@@ -28,19 +28,19 @@ Open http://localhost:3040.
 
 ## Two views
 
-**Flowchart.** The plan as a dependency tree that ends in `main`. The chart stays still and the cards change color as work moves through them. It turns to fit the window: top to bottom on a portrait monitor, left to right on a wide one, and zooms to fill the space.
+**Flowchart.** Your plan as a dependency tree that ends in `main`. The chart holds still while the cards change color as work moves through them. It lays itself out for the window it is in: top to bottom on a portrait monitor, left to right on a wide one, with long chains wrapped into rows, and it zooms to fill the space.
 
 <p align="center"><img src="../docs/dashboard/flowchart-portrait.png" alt="Flowchart on a portrait monitor" width="420"></p>
 
-**Board.** One column per tier: Queued, Port, Tier 1, Tier 2, Merge, Merged, Integration. Each card sits in the column of the agent working on it right now.
+**Board.** One column per stage: Queued, Port, Tier 1, Tier 2, Merge, Merged, Integration. A card sits in the column of whoever is working on it right now.
 
 ![Board view](../docs/dashboard/board.png)
 
-**Details.** Click any card for its agents, models, tool calls, tokens, the checker's findings, and what it blocks.
+**Details.** Click a card for its agents, models, tool calls, tokens and verdicts, the findings against it, and the units it is holding up.
 
 ![Unit details](../docs/dashboard/details.png)
 
-**Agent logs.** Click any agent in the details panel to open its full log over the page: the brief it was given, everything it said, every command, read and edit with its output, and its final report. A running agent's log streams in every 2 seconds and follows the newest step. Failed commands are marked in red and open by default.
+**Agent logs.** Click an agent in the details panel and its full log opens over the page: the brief it was given, what it said, every command, read and edit with its output, and its final report. While the agent is running, the log refreshes every 2 seconds and follows the newest step. Failed commands are marked in red and start expanded.
 
 ![An agent's log streaming in](../docs/dashboard/agent-log.gif)
 
@@ -48,9 +48,9 @@ Open http://localhost:3040.
 
 ## Reading a card
 
-- **The five-cell bar** is the unit's path: Port, T1, T2, Merge, Int. Blue stripes are running, green is done, amber stripes are a fix round (the badge counts rounds), red failed, hatched skipped (Tier 2 for a unit that is not risky).
-- **Arrows** are `queuedBehind` dependencies. Blue and moving: the blocker is running. Amber dashed: the blocker is itself waiting. Grey: met.
-- **Status** is one of running, between agents (waiting for an agent slot or the merge lock), waiting on, ready, merged, blocked, stale (the run was killed or went quiet), deferred.
+- **The five-cell bar** is the unit's path: Port, T1, T2, Merge, Int. Blue stripes: running. Green: done. Amber stripes: a fix round, with a badge counting the rounds. Red: failed. Hatched: skipped, which is Tier 2 on a unit that is not risky.
+- **Arrows** are `queuedBehind` dependencies and point at the unit that is waiting. Blue and moving: the blocker is running. Amber dashed: the blocker is itself waiting. Grey: met.
+- **Status** is one of running, between agents (waiting for a free agent slot or the merge lock), waiting on, ready, merged, blocked, stale (the run was killed or went quiet), deferred.
 - **A note** appears when `units.json` disagrees with what the run actually did, so a stale registry is easy to spot.
 
 ## Where it looks
@@ -70,4 +70,4 @@ Open http://localhost:3040.
 
 ## Built with
 
-Next.js, React Flow, dagre, shadcn/ui and Tailwind. Local only, no auth, no database. It is meant to sit on a second monitor while you keep talking to the foreman.
+Next.js, React Flow, dagre, shadcn/ui and Tailwind. Local only: no sign-in, no database. It is meant to sit on a second monitor while you keep talking to the foreman.

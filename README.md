@@ -14,7 +14,7 @@
 
 <img src="docs/dashboard/live-flowchart.gif" alt="Live dashboard: units flow through build, check, fix, second check and merge while queued units wait on their dependencies" width="100%">
 
-<sub>A simulated build in the live dashboard, sped up. Builders, checkers, fixers and mergers pick up each unit; arrows show who is waiting on whom; everything lands in <code>main</code>.</sub>
+<sub>The live dashboard, playing a simulated build at 6× speed. Each card is one unit of work. It lights up as a builder, checker, fixer or merger takes it, and the arrows show which units are waiting on which. Everything ends in <code>main</code>.</sub>
 
 **[Try the demo](#try-the-dashboard-in-30-seconds)** · **[Quick start](#quick-start)** · **[How it works](docs/how-it-works.md)** · **[The rules](docs/rules.md)**
 
@@ -22,7 +22,7 @@
 
 <br>
 
-unit-workflow is a way of running [Claude Code](https://claude.com/claude-code) on a large codebase where every piece of work is a small, written **unit**: one brief, one fresh worker in its own copy of the code, one independent checker, one merge, one full test pass, all in the background while you keep talking about the next thing. Nobody checks their own work, and everything is written down.
+unit-workflow is a way of running [Claude Code](https://claude.com/claude-code) on a codebase too big for one conversation. Every piece of work becomes a **unit**: a one-page brief, a fresh worker in its own copy of the code, an independent checker, a merge, and a full test pass. Units run in the background, several at a time, while you keep talking about the next thing. No worker checks its own work, and every outcome is written to disk.
 
 It was built while replacing a production SaaS platform end to end. In its first week it shipped **47 units** (features, fixes, migrations, an infrastructure cutover) with the founder reviewing outcomes, not diffs.
 
@@ -32,26 +32,26 @@ It was built while replacing a production SaaS platform end to end. In its first
 <tr>
 <td width="50%" valign="top">
 <img src="docs/dashboard/agent-log.gif" alt="An agent's log streaming in: each command, edit and output, then its final report">
-<br><b>Watch any agent think.</b><br><sub>Click an agent for its full log: every command, read and edit with its output, streaming in, down to the report it hands back.</sub>
+<br><b>Open any agent's log.</b><br><sub>Every command it runs, every file it reads or edits, and the output of each, as it happens. The report it hands back appears at the bottom.</sub>
 </td>
 <td width="50%" valign="top">
 <img src="docs/dashboard/board.png" alt="Board view: one column per tier">
-<br><b>Board.</b><br><sub>One column per tier, from Queued to Integration. Each card sits where its agent is working right now.</sub>
+<br><b>The board.</b><br><sub>One column per stage, from Queued to Integration. A card sits in the column of whoever is working on it right now.</sub>
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 <img src="docs/dashboard/agent-log.png" alt="A checker's failing test run and its refuted verdict">
-<br><b>Nobody grades their own homework.</b><br><sub>A checker runs the proofs, finds two failing tests, and refutes. A fixer gets exactly those findings.</sub>
+<br><b>Checkers refute.</b><br><sub>This checker ran the acceptance tests, found two failures, and sent the unit back. The fixer receives exactly those two findings and nothing else.</sub>
 </td>
 <td width="50%" valign="top">
 <img src="docs/dashboard/details.png" alt="Unit details with agents, verdicts and dependencies">
-<br><b>Every unit, explained.</b><br><sub>Agents, models, tool calls, tokens, verdicts, findings, and what the unit blocks.</sub>
+<br><b>One unit, in full.</b><br><sub>Its agents, models, tool calls, tokens and verdicts; the findings against it; and the units it is holding up.</sub>
 </td>
 </tr>
 </table>
 
-<p align="center"><img src="docs/dashboard/flowchart-portrait.png" alt="The flowchart on a portrait monitor" width="32%"><br><sub>The flowchart rearranges itself for the screen it is on: here, a portrait monitor beside the editor.</sub></p>
+<p align="center"><img src="docs/dashboard/flowchart-portrait.png" alt="The flowchart on a portrait monitor" width="32%"><br><sub>The flowchart lays itself out for whatever screen it is on. This is a portrait monitor next to the editor.</sub></p>
 
 ### Try the dashboard in 30 seconds
 
@@ -60,32 +60,30 @@ git clone https://github.com/nubbthedestroyer/unit-workflow
 cd unit-workflow/dashboard && pnpm install && pnpm demo   # http://localhost:3041
 ```
 
-The demo plays a simulated build on a loop. Point it at your own runs with `pnpm dev`; it reads the files unit-workflow already writes, so there is nothing to wire up. More in [dashboard/README.md](dashboard/README.md).
-
-## How a unit works
-
-![The unit workflow: people on the left, the eight steps of one unit across the middle, the files on disk that hold the truth along the bottom](docs/diagrams/unit-workflow.png)
+That plays a simulated build on a loop. To watch your own units, run `pnpm dev` instead. The dashboard reads the files unit-workflow already writes, so there is nothing to connect. Details in [dashboard/README.md](dashboard/README.md).
 
 ---
 
 ## Why this exists
 
-Ask one AI assistant to build a whole product in one long conversation and four things go wrong. It forgets what it was told at the beginning. It reads half the codebase to find one file. Two changes made at once step on each other. And you can no longer tell what is *done* from what it *said* it did.
+Ask one AI assistant to build a whole product in one long conversation and four things go wrong. It forgets what it was told at the start. It reads half the codebase to find one file. Two changes made at the same time step on each other. And you can no longer tell what is *done* from what it *said* it did.
 
-unit-workflow is four rules that fix those four problems:
+unit-workflow is four rules, one for each problem:
 
 | Rule | What it means in practice |
 |---|---|
 | **Small, named pieces** | A unit is one feature or one fix. Never "the whole app". |
-| **Fresh eyes every time** | Every step is a brand-new worker reading a one-page brief, not the chat history. |
-| **Nobody grades their own homework** | The worker that built it never checks it. Risky work gets a second, adversarial checker. |
-| **Truth lives on disk** | Status, decisions, and results are files in the repo. A new session picks up exactly where the last one stopped. |
+| **Fresh eyes every time** | Each step is a brand-new worker reading a one-page brief, not the chat history. |
+| **Nobody grades their own homework** | The worker that built it never checks it. Risky work gets a second checker whose only job is to find fault. |
+| **Truth lives on disk** | Status, decisions and results are files in the repo. A new session picks up exactly where the last one stopped. |
 
 ---
 
 ## The life of a unit
 
 You say what you want. The foreman (the assistant you talk to) turns it into a unit and hands it to the crew.
+
+![The unit workflow: people on the left, the eight steps of one unit across the middle, the files on disk that hold the truth along the bottom](docs/diagrams/unit-workflow.png)
 
 ```mermaid
 flowchart LR
@@ -102,23 +100,23 @@ flowchart LR
 ```
 
 1. **Brief.** A one-page contract: your words at the top, the files the unit owns, the files it must not touch, where to copy patterns from, and the commands that prove it is done.
-2. **Builder.** Works in its own git worktree. It cannot break anything you or another unit is doing.
-3. **Checker.** Reads the same brief, runs the proofs, clicks through the app, and reports file and line for every finding.
-4. **Fixer.** Repairs what the checker found; the checker looks again. At most two rounds.
-5. **Second checker.** Only for risky units (money, sign-in, tenant isolation, ingestion, public doors). Its brief is to *refute*.
+2. **Builder.** Works in its own git worktree, so it cannot break anything you or another unit is doing.
+3. **Checker.** Reads the same brief, runs the proofs, clicks through the app, and reports a file and line for every finding.
+4. **Fixer.** Repairs what the checker found. The checker looks again. At most two rounds.
+5. **Second checker.** Only for risky units: money, sign-in, tenant isolation, data ingestion, anything reachable from outside. Its brief is to *refute*.
 6. **Merger.** Folds the branch into `main`, one unit at a time.
 7. **Inspector.** Runs the whole build and test suite on `main` and explains every failure: new, or old noise?
-8. **Ship.** Migrations applied, deploy runs, the ledger records the outcome.
+8. **Ship.** Migrations are applied, the deploy runs, and the ledger records the outcome.
 
-Ask **"status?"** at any moment and get a table of every unit, its stage, and how long it has been there. Or leave the [dashboard](dashboard/) open on a second monitor.
+Ask **"status?"** at any moment for a table of every unit, its stage, and how long it has been there. Or leave the [dashboard](dashboard/) open on a second monitor.
 
-The plain-language walk-through, written for someone who has never touched AI tooling, is in [docs/how-it-works.md](docs/how-it-works.md).
+A plain-language walk-through, written for someone who has never used AI tooling, is in [docs/how-it-works.md](docs/how-it-works.md).
 
 ---
 
-## What it looks like on disk
+## What the foreman reads and writes
 
-A contract (the brief a builder reads; nothing else):
+A contract. This is the entire brief a builder sees:
 
 ```markdown
 # Contract: Miles chat pane grip and resize
@@ -141,7 +139,7 @@ The owner, 2026-09-10: "The AI chat pane needs a grip pill and the ability to re
 pnpm typecheck; pnpm vitest run test/unit/shell* --reporter=dot; pnpm verify; Playwright as above.
 ```
 
-The launch (one call to the saved workflow by name; the script does the rest in the background):
+The launch. One call to the saved workflow by name; the script does the rest in the background:
 
 ```js
 Workflow({
@@ -154,7 +152,7 @@ Workflow({
 })
 ```
 
-The status table, ten minutes later (or the same thing, live, in the [dashboard](dashboard/)):
+The status table, ten minutes later. The [dashboard](dashboard/) shows the same thing live:
 
 ```
 RUNNING / QUEUED (1)
@@ -168,7 +166,7 @@ unit                  what                                 status  when         
 76-jobs-push-v2       respond-fast jobs, hourly fallback   merged  2026-09-10T18:20  verified+merged
 ```
 
-Every worker's report is a fixed JSON shape, so the foreman reads fields, not paragraphs:
+A worker's report. Every report has the same fixed shape, so the foreman reads fields, not paragraphs:
 
 ```json
 { "status": "done",
@@ -184,15 +182,15 @@ Every worker's report is a fixed JSON shape, so the foreman reads fields, not pa
 
 ## Quick start
 
-You need Claude Code with the Workflow tool (dynamic workflows), a git repository, and a test command worth trusting.
+You need Claude Code with the Workflow tool (dynamic workflows), a git repository, and a test command you trust.
 
-1. **Install the skill.** Copy `skill/unit-workflow` to `~/.claude/skills/unit-workflow` (global) or `.claude/skills/unit-workflow` in the repo. Claude Code picks it up when you say "unit", "status?", or "launch X as a unit".
+1. **Install the skill.** Copy `skill/unit-workflow` to `~/.claude/skills/unit-workflow` (for every project) or `.claude/skills/unit-workflow` inside the repo (for one). Claude Code picks it up when you say "unit", "status?", or "launch X as a unit".
 2. **Save the workflow by name.** Link the template where the Workflow tool looks for saved workflows, so every project launches the same script:
    ```sh
    mkdir -p ~/.claude/workflows
    ln -s ~/.claude/skills/unit-workflow/templates/unit-workflow.js ~/.claude/workflows/unit-workflow.js
    ```
-3. **Create the plan folder** in your repo (no script copy goes here):
+3. **Create the plan folder** in your repo. It holds state, never a copy of the script:
    ```
    docs/plan/
      units.json          {"units":[]}
@@ -200,7 +198,7 @@ You need Claude Code with the Workflow tool (dynamic workflows), a git repositor
      resume.md           where the last session stopped
      contracts/          one file per unit
    ```
-   Put your project settings in the "Project defaults" section of `SKILL.md`: `target`, `plan`, and optionally `project`, `planDocs`, `suiteCmd`, `trailer`, `maxOpus`. The foreman passes them as `args` on every launch.
+   Put your project settings in the "Project defaults" section of `SKILL.md`: `target` and `plan`, plus `project`, `planDocs`, `suiteCmd`, `trailer` and `maxOpus` if you want them. The foreman passes them as `args` on every launch.
 4. **Write the first contract** from `skill/unit-workflow/templates/contract.md`, register it in `units.json`, and say "launch it".
 5. **Ask "status?"** whenever you like. Say "resume" in a new session and the foreman reads `resume.md` first.
 
@@ -212,37 +210,43 @@ Everything the foreman does is spelled out in [skill/unit-workflow/SKILL.md](ski
 
 | Path | What it is |
 |---|---|
-| [docs/how-it-works.md](docs/how-it-works.md) | The explainer, trunk first, details later. Start here if you are new. |
+| [docs/how-it-works.md](docs/how-it-works.md) | The explainer, big picture first, details later. Start here if you are new. |
 | [docs/rules.md](docs/rules.md) | Every rule the workflow runs on, with the incident that produced it. |
-| [docs/diagrams/](docs/diagrams/) | The diagram above as editable draw.io, PNG, and the Python generator that draws it. |
-| [dashboard/](dashboard/) | The live dashboard: a flowchart and a board of every unit, refreshed every 3 seconds from the files on disk. `pnpm demo` runs a simulated build. |
+| [docs/diagrams/](docs/diagrams/) | The diagram above as editable draw.io, PNG, and the Python script that draws it. |
+| [dashboard/](dashboard/) | The live dashboard: a flowchart and a board of every unit, refreshed every 3 seconds from the files on disk. `pnpm demo` plays a simulated build. |
 | [skill/unit-workflow/](skill/unit-workflow/) | The Claude Code skill: SKILL.md, the saved workflow script, the contract template, the status command. |
 | [examples/contracts/](examples/contracts/) | Three real contracts from production units: a feature, a numbers-heavy estimate, an external integration. |
-| [examples/units.json](examples/units.json) | A real registry slice showing the lifecycle fields. |
+| [examples/units.json](examples/units.json) | A real slice of the registry, showing the lifecycle fields. |
 
 ---
 
 ## Under the hood
 
-The engine is a Claude Code **dynamic workflow**: a small JavaScript script that orchestrates many agents deterministically. `agent()` spawns a worker with a prompt, a model, a tool-call cap, worktree isolation, and a JSON schema its report must satisfy. `pipeline()` pushes each unit through build → check → fix → second check → merge independently: each unit merges as soon as it clears, behind a lock so only one merge runs at a time, while other units are still being checked. One integration pass runs after the last merge. The same script serves every project; paths and commands arrive as launch `args`, and `args.only` reruns a subset of units by key. Every run has an id and a journal of what each agent returned; a stopped or edited run resumes from cache.
+The engine is a Claude Code **dynamic workflow**: a short JavaScript script that starts agents and decides what happens next based on what they return.
 
-Models: the foreman (your main session) runs on Claude Fable; every worker the script spawns is pinned to Claude Opus 5.5 (`claude-opus-5-5`), three at a time per run across all tiers (`args.maxOpus` changes it), with tool-call caps per role (roughly 60 to build, 30 to fix, 20 to check, 15 to merge). Read-only lookups may use Sonnet.
+- `agent()` starts one worker with a prompt, a model, a cap on tool calls, its own worktree, and a JSON schema its report must match.
+- `pipeline()` takes each unit through build, check, fix, second check and merge on its own. A unit merges the moment it clears, behind a lock so only one merge runs at a time, while other units are still being checked.
+- One integration pass runs after the last merge.
+- The same script serves every project. Paths and commands arrive as launch `args`, and `args.only` reruns a subset of units by key.
+- Every run has an id and a journal of what each agent returned. A stopped or edited run resumes from that journal instead of starting over.
 
-Cost: a feature-sized unit spends 400k to 1.1M tokens across its six to ten workers. That is the price of isolation and independent verification. It is cheaper than the long chat that rereads the codebase twice and still ships something half-checked.
+**Models.** The foreman, which is your main session, runs on Claude Fable. Every worker the script starts is pinned to Claude Opus 5.5 (`claude-opus-5-5`), three at a time per run across all stages (`args.maxOpus` changes that). Each role has a tool-call cap: about 60 to build, 30 to fix, 20 to check, 15 to merge. Read-only lookups may use Sonnet.
+
+**Cost.** A feature-sized unit spends 400k to 1.1M tokens across its six to ten workers. That is the price of isolation and independent checking. It is still cheaper than one long chat that rereads the codebase twice and ships something half-checked.
 
 ---
 
 ## What it is not
 
 - Not a framework or a library. It is a skill file, a script template, and a way of working. There is nothing to import.
-- Not autonomous product management. The foreman decides routine things and stops for the owner on four kinds of decisions: dropping a feature, changing a public URL or API, spending money, touching an external service.
-- Not tuned for tiny changes. A one-line fix goes to a single agent in a worktree, not a unit.
+- Not an autonomous product manager. The foreman decides routine things on its own and stops for you on four kinds of decision: dropping a feature, changing a public URL or API, spending money, touching an external service.
+- Not for tiny changes. A one-line fix goes to a single agent in a worktree, not a unit.
 
 ---
 
 ## Status
 
-Public beta. The skill, script template, and rules are lifted from a production project where they run daily; the project-specific defaults live in one clearly marked section of `SKILL.md` and reach the script as launch `args`, so adopting it is an edit, not a rewrite. Issues and questions are welcome.
+Public beta. The skill, script template and rules come from a production project where they run every day. The project-specific defaults live in one marked section of `SKILL.md` and reach the script as launch `args`, so adopting it is an edit, not a rewrite. Issues and questions are welcome.
 
 ## License
 
