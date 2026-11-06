@@ -53,7 +53,7 @@ export interface RawRun {
 }
 
 const ROLE_PHASE: Record<string, string> = {
-  port: "Port", verify1: "Tier 1", fix: "Tier 1", verify2: "Tier 2", merge: "Merge", ship: "Merge", suite: "Integration", review: "Integration",
+  port: "Port", verify1: "Tier 1", walk: "Tier 1", fix: "Tier 1", verify2: "Tier 2", merge: "Merge", ship: "Merge", suite: "Integration", review: "Integration",
 }
 
 function splitLabel(label: string) {

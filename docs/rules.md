@@ -16,6 +16,18 @@ Every rule below was paid for. The date is when it was learned; the story is why
 
 Sonnet workers were not finishing units in one pass and declined feature-sized items as out of scope. Retries cost more than the bigger model. Every worker is now pinned to Opus 5.5 (`claude-opus-5-5`) while the foreman's session runs Fable; Sonnet only for read-only lookups. Tool-call caps per role keep a confused worker from spending without limit: roughly 60 to build, 30 to fix, 20 to check, 15 to merge. Three Opus workers at a time per run, across every tier (`args.maxOpus` changes it).
 
+## Models by kind of work (2026-11-06)
+
+A 37-agent run on a client project (11 units of 15 to 24 findings each, Sonnet builders, Opus for heavy units and risky reviews) measured where the tokens went:
+
+- **Sonnet builders were wordy, not cheap.** They ran 97 to 369 turns, peaked at up to 629K context and wrote up to 256K output tokens each. Per finding they used 0.5M to 4M cache-read tokens; the Opus builders used 2M to 3M. Sonnet is cheaper per token, but it spent more tokens.
+- **Prompt caps did not hold.** No worker stopped at its stated cap. The fix is a real handoff: past about 50 tool calls a worker commits, writes a five-sentence note and stops, and the script starts a fresh agent from the note.
+- **Sonnet is fast where the work is mechanical.** It walked screens in under a second each where Opus took about six, and Sonnet merges took 6 to 10 turns.
+- **Reviews cost as much as builds** when the reviewer re-walked every screen at two sizes on Opus.
+- **Lean agent types halve input.** A default agent started at about 110K tokens of connector and skill definitions; a lean agent with shell, file tools and a headless browser started at about 18K. Across about 1,000 turns that halved cache reads.
+
+So: Opus writes and fixes code and judges risky diffs without a browser; Sonnet runs commands, walks only the screens a contract lists, merges and runs the suite; every agent is a lean type; units stay near 8 items. This replaces the 2026-09-08 rule below for every role except build and fix, which stay on Opus for the same reason as before.
+
 ## One script, launched by name
 
 Every project used to carry its own edited copy of the workflow script, and the copies drifted. There is now one saved workflow (`unit-workflow`, linked into `~/.claude/workflows/`); paths, suite command and trailer arrive as launch `args`. Edited prompts invalidate the resume cache, so a rerun after a prompt change is a new run with `args.only` listing the unit keys that still need work.

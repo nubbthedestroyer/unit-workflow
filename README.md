@@ -8,7 +8,7 @@ unit-workflow is an open-source workflow for builders running Claude Code on cod
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
-[![Fable orchestrates, Opus 5.5 workers](https://img.shields.io/badge/workers-Claude%20Opus%205.5-8B5CF6)](skill/unit-workflow/SKILL.md#models-fable-orchestrates-opus-55-everywhere-else)
+[![Opus builds, Sonnet checks](https://img.shields.io/badge/workers-Opus%20builds%20%C2%B7%20Sonnet%20checks-8B5CF6)](skill/unit-workflow/SKILL.md#models-opus-thinks-and-writes-code-sonnet-runs-and-walks)
 [![Live dashboard included](https://img.shields.io/badge/dashboard-live%20flowchart-38BDF8)](dashboard/)
 [![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
 [![Status: public beta](https://img.shields.io/badge/status-public%20beta-0EA5E9)](#status)
@@ -192,6 +192,11 @@ You need Claude Code with the Workflow tool (dynamic workflows), a git repositor
    mkdir -p ~/.claude/workflows
    ln -s ~/.claude/skills/unit-workflow/templates/unit-workflow.js ~/.claude/workflows/unit-workflow.js
    ```
+   Install the lean agent types the workers run as, then start a new session so they load. `lean-checker` drives a headless browser through a Playwright MCP server named `playwright-chrome`; rename the tools in its file if yours is named differently.
+   ```sh
+   mkdir -p ~/.claude/agents
+   cp agents/lean-worker.md agents/lean-checker.md ~/.claude/agents/
+   ```
 3. **Create the plan folder** in your repo. It holds state, never a copy of the script:
    ```
    docs/plan/
@@ -200,7 +205,7 @@ You need Claude Code with the Workflow tool (dynamic workflows), a git repositor
      resume.md           where the last session stopped
      contracts/          one file per unit
    ```
-   Put your project settings in the "Project defaults" section of `SKILL.md`: `target` and `plan`, plus `project`, `planDocs`, `suiteCmd`, `trailer` and `maxOpus` if you want them. The foreman passes them as `args` on every launch.
+   Put your project settings in the "Project defaults" section of `SKILL.md`: `target` and `plan`, plus `project`, `planDocs`, `suiteCmd`, `trailer`, `models`, `maxOpus`, `maxSonnet` and `handoffAt` if you want them. The foreman passes them as `args` on every launch.
 4. **Write the first contract** from `skill/unit-workflow/templates/contract.md`, register it in `units.json`, and say "launch it".
 5. **Ask "status?"** whenever you like. Say "resume" in a new session and the foreman reads `resume.md` first.
 
@@ -232,7 +237,7 @@ The engine is a Claude Code **dynamic workflow**: a short JavaScript script that
 - The same script serves every project. Paths and commands arrive as launch `args`, and `args.only` reruns a subset of units by key.
 - Every run has an id and a journal of what each agent returned. A stopped or edited run resumes from that journal instead of starting over.
 
-**Models.** The foreman, which is your main session, runs on Claude Fable. Every worker the script starts is pinned to Claude Opus 5.5 (`claude-opus-5-5`), three at a time per run across all stages (`args.maxOpus` changes that). Each role has a tool-call cap: about 60 to build, 30 to fix, 20 to check, 15 to merge. Read-only lookups may use Sonnet.
+**Models.** The foreman, your main session, writes the contracts. Claude Opus 5.5 builds, fixes and reviews risky diffs. Claude Sonnet 5.5 runs the checks, walks the screens, merges and runs the suite. Every worker uses a lean agent type (`agents/lean-worker.md`, `agents/lean-checker.md`; copy them to `~/.claude/agents/`) that skips connectors and skills. Builders hand off to a fresh agent after about 50 tool calls. Caps: three Opus and six Sonnet at a time (`args.maxOpus`, `args.maxSonnet`); `args.models` changes the model for any role.
 
 **Cost.** A feature-sized unit spends 400k to 1.1M tokens across its six to ten workers. That is the price of isolation and independent checking. It is still cheaper than one long chat that rereads the codebase twice and ships something half-checked.
 

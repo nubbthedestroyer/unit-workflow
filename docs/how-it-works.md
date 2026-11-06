@@ -87,7 +87,7 @@ Every run has an id (`wf_…`) and a journal of what each agent returned. If a r
 
 ### Models and caps
 
-The foreman (your main session) runs on Claude Fable. Every worker the script spawns is pinned to Claude Opus 5.5 (the owner's rule since September 2026: Sonnet was not finishing jobs in one pass, and retries cost more than the bigger model). At most three workers run at once per workflow run, across every tier; a launch argument can change the cap. Each role has a tool-call cap so a confused worker cannot spend without limit: roughly 60 calls to build, 30 to fix, 20 to check, 15 to merge.
+The foreman (your main session) does the thinking: it writes each contract down to the file and line, so no worker has to explore. Inside the run, Claude Opus 5.5 writes and fixes code and judges risky diffs, because it finishes in one pass more often. Claude Sonnet 5.5 runs the checks, walks the screens a contract lists in a headless browser, merges and runs the suite, because that work is mechanical and Sonnet is several times faster at it. Every agent uses a lean agent type with no connectors or skills, so it starts at about 18K tokens instead of about 110K. Builders stop after about 50 tool calls and hand off to a fresh agent with a short note, which keeps context small. At most three Opus and six Sonnet agents run at once per run; launch arguments change the caps and the model for any role. The measurements behind this are in `docs/rules.md`.
 
 ### The two tiers of checking
 
