@@ -14,7 +14,7 @@ Every rule below was paid for. The date is when it was learned; the story is why
 
 ## Models and caps (2026-09-08)
 
-Sonnet workers were not finishing units in one pass and declined feature-sized items as out of scope. Retries cost more than the bigger model. Every worker is now pinned to Opus 5.5 (`claude-opus-5-5`) while the foreman's session runs Fable; Sonnet only for read-only lookups. Tool-call caps per role keep a confused worker from spending without limit: roughly 60 to build, 30 to fix, 20 to check, 15 to merge. Three Opus workers at a time per run, across every tier (`args.maxOpus` changes it).
+Sonnet workers were not finishing units in one pass and declined feature-sized items as out of scope. Retries cost more than the bigger model. Every worker is now pinned to Opus 5.5 (`claude-opus-5-5`), whatever model the foreman's session runs; Sonnet only for read-only lookups. Tool-call caps per role keep a confused worker from spending without limit: roughly 60 to build, 30 to fix, 20 to check, 15 to merge. Three Opus workers at a time per run, across every tier (`args.maxOpus` changes it).
 
 ## Models by kind of work (2026-11-06)
 
@@ -31,6 +31,10 @@ So: Opus writes and fixes code and judges risky diffs without a browser; Sonnet 
 ## One script, launched by name
 
 Every project used to carry its own edited copy of the workflow script, and the copies drifted. There is now one saved workflow (`unit-workflow`, linked into `~/.claude/workflows/`); paths, suite command and trailer arrive as launch `args`. Edited prompts invalidate the resume cache, so a rerun after a prompt change is a new run with `args.only` listing the unit keys that still need work.
+
+## Overrides live outside the skill (2026-11-06)
+
+Project defaults used to live in a marked section of `SKILL.md`. Every update meant copying the new skill over and hand-picking the private section back in, and the public copy kept picking up one project's names, paths and deploy commands. Now the skill is generic and replaced wholesale on update. Settings and rules live in override layers (`~/.claude/unit-workflow/`, `~/.claude/unit-workflow/projects/<repo>/`, `<repo>/.unit-workflow/`), and `scripts/resolve.mjs` merges them into the launch args before every run.
 
 ## Worktrees and processes
 

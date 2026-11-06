@@ -1,0 +1,13 @@
+{
+  "//": "Example project overrides for a fictional app, Tasklane. Copy this folder to <your repo>/.unit-workflow/ and edit.",
+  "project": "Tasklane",
+  "planDir": "docs/plan",
+  "planDocs": "docs/architecture.md, contracts/<unit>.md",
+  "pm": "npm",
+  "typecheckCmd": "npm run typecheck",
+  "verifyCmd": "npm run lint",
+  "suiteCmd": "npm run build, then npx vitest run --reporter=dot (tail -60), then npm run lint",
+  "push": false,
+  "models": { "fix": "opus", "walk": "sonnet" },
+  "maxSonnet": 4
+}

@@ -89,6 +89,10 @@ Every run has an id (`wf_…`) and a journal of what each agent returned. If a r
 
 The foreman (your main session) does the thinking: it writes each contract down to the file and line, so no worker has to explore. Inside the run, Claude Opus 5.5 writes and fixes code and judges risky diffs, because it finishes in one pass more often. Claude Sonnet 5.5 runs the checks, walks the screens a contract lists in a headless browser, merges and runs the suite, because that work is mechanical and Sonnet is several times faster at it. Every agent uses a lean agent type with no connectors or skills, so it starts at about 18K tokens instead of about 110K. Builders stop after about 50 tool calls and hand off to a fresh agent with a short note, which keeps context small. At most three Opus and six Sonnet agents run at once per run; launch arguments change the caps and the model for any role. The measurements behind this are in `docs/rules.md`.
 
+### Making it yours
+
+Nothing in the skill is tied to one app, company or toolchain. Your commands, branch, models, rules and deploy steps live in small override files outside the skill. Some are yours (`~/.claude/unit-workflow/`); some are the project's, committed with the code (`<repo>/.unit-workflow/`). Updating the skill never touches them. Before every launch the foreman runs one command that merges them. Your rules then reach every agent, or only the role you named, without anyone having to repeat them.
+
 ### The two tiers of checking
 
 Tier 1 asks "does it do what the contract says?" and runs at low effort: typecheck, unit tests, the app in a browser, screenshots to a scratch folder. Tier 2 exists only for risky units and runs at high effort with an adversarial brief: try to refute it, look for the tenancy or money mistake a happy-path test would miss.

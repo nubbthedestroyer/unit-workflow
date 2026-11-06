@@ -1,7 +1,7 @@
 export const meta = {
   name: 'unit-workflow',
   description: 'Unit tiers: per-unit worktree port (Opus, with context handoff), Tier 1 checks (Sonnet runs commands and walks screens, Opus fixes), Tier 2 Opus review for risky units, merge as each unit clears (one at a time), one integration pass.',
-  whenToUse: 'Launch one or more units from a plan dir. args: {target, plan, units:[{key, risky, contract, brief, walk?, build?}], only?, project?, planDocs?, suiteCmd?, trailer?, models?, maxOpus?, maxSonnet?, handoffAt?, maxHandoffs?, workerType?, checkerType?, baseBranch?, remote?, push?, pm?, installCmd?, typecheckCmd?, verifyCmd?}',
+  whenToUse: 'Launch one or more units from a plan dir. args (from scripts/resolve.mjs, plus units): {target, plan, units:[{key, risky, contract, brief, walk?, build?}], only?, project?, planDocs?, suiteCmd?, trailer?, rules?, roleNotes?, models?, maxOpus?, maxSonnet?, handoffAt?, maxHandoffs?, workerType?, checkerType?, baseBranch?, remote?, push?, pm?, installCmd?, typecheckCmd?, verifyCmd?}',
   phases: [
     { title: 'Port', detail: 'build each unit in its own worktree; hand off to a fresh agent past the call budget', model: 'claude-opus-5-5' },
     { title: 'Tier 1', detail: 'Sonnet runs the acceptance commands, then walks the screens; Opus fixes on failure, max 2 rounds', model: 'claude-sonnet-5-5' },
@@ -11,7 +11,9 @@ export const meta = {
   ],
 }
 
-// Project settings arrive in args so one script serves every project (no per-project copy)
+// Project settings arrive in args so one script serves every project (no per-project copy).
+// Never edit this file for one project: put settings in the override layers and let the foreman pass them
+// (scripts/resolve.mjs merges defaults.json, ~/.claude/unit-workflow/, and <repo>/.unit-workflow/ into these args).
 const A = args || {}
 if (!A.target || !A.plan) throw new Error('args.target and args.plan are required (absolute paths)')
 const TARGET = A.target
@@ -65,7 +67,14 @@ const slots = { opus: { n: 0, q: [] }, sonnet: { n: 0, q: [] } }
 const famOf = (model) => model === OPUS ? 'opus' : 'sonnet'
 const acquire = (f) => new Promise(r => { const s = slots[f]; if (s.n < MAX[f]) { s.n++; r() } else s.q.push(r) })
 const release = (f) => { const s = slots[f]; s.n--; const w = s.q.shift(); if (w) { s.n++; w() } }
+// Override text: args.rules goes to every worker, args.roleNotes[role] to one role (port, fix, verify1, walk, verify2, merge, suite, review)
+const ROLE_NOTES = A.roleNotes || {}
+const extra = (role) => {
+  const r = role === 'build' ? 'port' : role
+  return (A.rules ? ' Project rules: ' + A.rules : '') + (ROLE_NOTES[r] ? ' Notes for ' + r + ': ' + ROLE_NOTES[r] : '')
+}
 const run = async (role, prompt, opts) => {
+  prompt = prompt + extra(role)
   const model = opts.model || MODELS[role]
   const f = famOf(model)
   await acquire(f)

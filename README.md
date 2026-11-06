@@ -10,7 +10,7 @@ unit-workflow is an open-source workflow for builders running Claude Code on cod
 [![Requires Claude Code with dynamic workflows](https://img.shields.io/badge/requires-Claude%20Code%20%2B%20Workflow%20tool-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
 [![Opus builds, Sonnet checks](https://img.shields.io/badge/workers-Opus%20builds%20%C2%B7%20Sonnet%20checks-8B5CF6)](skill/unit-workflow/SKILL.md#models-opus-thinks-and-writes-code-sonnet-runs-and-walks)
 [![Live dashboard included](https://img.shields.io/badge/dashboard-live%20flowchart-38BDF8)](dashboard/)
-[![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](examples/units.json)
+[![Units shipped in production](https://img.shields.io/badge/units%20shipped-47-2EA043)](docs/rules.md)
 [![Status: public beta](https://img.shields.io/badge/status-public%20beta-0EA5E9)](#status)
 [![Last commit](https://img.shields.io/github/last-commit/nubbthedestroyer/unit-workflow)](https://github.com/nubbthedestroyer/unit-workflow/commits/main)
 
@@ -18,7 +18,7 @@ unit-workflow is an open-source workflow for builders running Claude Code on cod
 
 <sub>The live dashboard, playing a simulated build at 6× speed. Each card is one unit of work. It lights up as a builder, checker, fixer or merger takes it, and the arrows show which units are waiting on which. Everything ends in <code>main</code>.</sub>
 
-**[Try the demo](#try-the-dashboard-in-30-seconds)** · **[Quick start](#quick-start)** · **[How it works](docs/how-it-works.md)** · **[The rules](docs/rules.md)**
+**[Try the demo](#try-the-dashboard-in-30-seconds)** · **[Quick start](#quick-start)** · **[Customize](#customize-it-for-your-project)** · **[How it works](docs/how-it-works.md)** · **[The rules](docs/rules.md)**
 
 </div>
 
@@ -121,7 +121,7 @@ A plain-language walk-through, written for someone who has never used AI tooling
 A contract. This is the entire brief a builder sees:
 
 ```markdown
-# Contract: Miles chat pane grip and resize
+# Contract: chat pane grip and resize
 
 ## Purpose
 The owner, 2026-09-10: "The AI chat pane needs a grip pill and the ability to resize it a little bit."
@@ -131,26 +131,29 @@ The owner, 2026-09-10: "The AI chat pane needs a grip pill and the ability to re
   between 20rem and 40rem; keyboard arrows; double-click resets; width persisted in localStorage
   with the same hydration guard the file already uses.
 - Do NOT edit: components/chat/*, components/try/*, lib/*.
-- Tests: Vitest for the clamp/persist helpers; Playwright: drag, reload, width persists.
+- Tests: Vitest for the clamp/persist helpers.
 
 ## Reference slice (copy from, do not explore further)
 - components/shell/chat-pane.tsx:27-65 localStorage open flag; :160-200 width animation
 - app/globals.css `--chat-pane-w`
 
+## Walk
+- / at 1440x900: drag the grip, reload, the width persists; arrow keys resize; double-click resets.
+
 ## Acceptance test
-pnpm typecheck; pnpm vitest run test/unit/shell* --reporter=dot; pnpm verify; Playwright as above.
+pnpm typecheck; pnpm vitest run test/unit/shell* --reporter=dot; pnpm verify.
 ```
 
-The launch. One call to the saved workflow by name; the script does the rest in the background:
+The launch. The foreman resolves your settings (`scripts/resolve.mjs`), adds the units, and makes one call to the saved workflow; the script does the rest in the background:
 
 ```js
 Workflow({
   name: 'unit-workflow',
-  args: { target: '/abs/path/to/repo', plan: '/abs/path/to/repo/docs/plan',
-          suiteCmd: 'pnpm build, then pnpm test --reporter=dot (tail -60), then pnpm verify',
+  args: { ...resolvedArgs,   // target, plan, commands, models, rules from your override layers
           units: [{ key: '79-chat-pane-resize', risky: false,
                     contract: '79-chat-pane-resize.md',
-                    brief: 'Grip pill and drag/keyboard resize for the chat pane, persisted.' }] }
+                    brief: 'Grip pill and drag/keyboard resize for the chat pane, persisted.',
+                    walk: '/ at 1440x900: drag, reload, width persists' }] }
 })
 ```
 
@@ -159,24 +162,24 @@ The status table, ten minutes later. The [dashboard](dashboard/) shows the same 
 ```
 RUNNING / QUEUED (1)
 unit                  what                         stage                    calls elapsed run
-79-chat-pane-resize   Miles chat pane grip/resize  verify1 (port=done)      14    9m      wf_db9122bf-366
+79-chat-pane-resize   chat pane grip/resize        walk (verify1=verified)      14    9m      wf_db9122bf-366
 
 LAST COMPLETED (3)
 unit                  what                                 status  when              outcome
-78-sandbox-v3         national-average card, revenue band  merged  2026-09-10T22:50  verified+merged
-77-savings-estimate   savings range hero                   merged  2026-09-10T20:50  verified+merged; suite green
-76-jobs-push-v2       respond-fast jobs, hourly fallback   merged  2026-09-10T18:20  verified+merged
+78-export-csv         export a filtered list as CSV            merged  2026-09-10T22:50  verified+merged
+77-billing-webhooks   idempotent payment webhooks              merged  2026-09-10T20:50  verified+merged; suite green
+76-job-retries        retry failed background jobs with backoff merged  2026-09-10T18:20  verified+merged
 ```
 
 A worker's report. Every report has the same fixed shape, so the foreman reads fields, not paragraphs:
 
 ```json
 { "status": "done",
-  "findings": [{ "path": "lib/sandbox/savings.ts", "line": 588,
-                 "note": "spend basis had no document-status filter; now review OR approved" }],
-  "changed": ["lib/sandbox/savings.ts", "components/try/savings-hero.tsx"],
+  "findings": [{ "path": "src/api/webhooks/billing.ts", "line": 41,
+                 "note": "event id was recorded after the change; now in the same transaction" }],
+  "changed": ["src/api/webhooks/billing.ts", "db/migrations/0042_processed_events.sql"],
   "verified": [{ "cmd": "pnpm typecheck", "pass": true },
-               { "cmd": "pnpm vitest run test/unit/sandbox* --reporter=dot", "pass": true }],
+               { "cmd": "pnpm vitest run src/api/webhooks --reporter=dot", "pass": true }],
   "ledgerUpdated": true, "blockers": [] }
 ```
 
@@ -186,18 +189,14 @@ A worker's report. Every report has the same fixed shape, so the foreman reads f
 
 You need Claude Code with the Workflow tool (dynamic workflows), a git repository, and a test command you trust.
 
-1. **Install the skill.** Copy `skill/unit-workflow` to `~/.claude/skills/unit-workflow` (for every project) or `.claude/skills/unit-workflow` inside the repo (for one). Claude Code picks it up when you say "unit", "status?", or "launch X as a unit".
-2. **Save the workflow by name.** Link the template where the Workflow tool looks for saved workflows, so every project launches the same script:
+1. **Install.** From a clone of this repo:
    ```sh
-   mkdir -p ~/.claude/workflows
-   ln -s ~/.claude/skills/unit-workflow/templates/unit-workflow.js ~/.claude/workflows/unit-workflow.js
+   node install.mjs                          # skill, saved workflow, lean agent types, your override folder
+   node install.mjs --browser-mcp <name>     # if your Playwright MCP server is not named "playwright"
+   node install.mjs --project /path/to/repo  # also scaffold the repo's .unit-workflow/ overrides
    ```
-   Install the lean agent types the workers run as, then start a new session so they load. `lean-checker` drives a headless browser through a Playwright MCP server named `playwright-chrome`; rename the tools in its file if yours is named differently.
-   ```sh
-   mkdir -p ~/.claude/agents
-   cp agents/lean-worker.md agents/lean-checker.md ~/.claude/agents/
-   ```
-3. **Create the plan folder** in your repo. It holds state, never a copy of the script:
+   Rerun it to update. It replaces the skill and never touches your overrides. Start a new Claude Code session afterwards so the agent types load.
+2. **Create the plan folder** in your repo. It holds state, never a copy of the script:
    ```
    docs/plan/
      units.json          {"units":[]}
@@ -205,11 +204,38 @@ You need Claude Code with the Workflow tool (dynamic workflows), a git repositor
      resume.md           where the last session stopped
      contracts/          one file per unit
    ```
-   Put your project settings in the "Project defaults" section of `SKILL.md`: `target` and `plan`, plus `project`, `planDocs`, `suiteCmd`, `trailer`, `models`, `maxOpus`, `maxSonnet` and `handoffAt` if you want them. The foreman passes them as `args` on every launch.
-4. **Write the first contract** from `skill/unit-workflow/templates/contract.md`, register it in `units.json`, and say "launch it".
+3. **Set your project up** in `<repo>/.unit-workflow/`: commands, branch, models, rules (see [Customize](#customize-it-for-your-project)). Check the merged result with `node ~/.claude/skills/unit-workflow/scripts/resolve.mjs <repo>`.
+4. **Write the first contract** from the template, register it in `units.json`, and say "launch it".
 5. **Ask "status?"** whenever you like. Say "resume" in a new session and the foreman reads `resume.md` first.
 
 Everything the foreman does is spelled out in [skill/unit-workflow/SKILL.md](skill/unit-workflow/SKILL.md).
+
+---
+
+## Customize it for your project
+
+Nothing in the skill is specific to one app, company or toolchain. Your settings live in **override layers** outside it, so updates never overwrite them and you never hand-merge.
+
+| Layer | Where | For |
+|---|---|---|
+| built-in | `skill/unit-workflow/defaults.json` | everyone (replaced on update) |
+| you | `~/.claude/unit-workflow/config.json`, `overrides.md` | you, every project |
+| you, one project | `~/.claude/unit-workflow/projects/<repo name>/` | you, one project, kept out of its repo |
+| the project | `<repo>/.unit-workflow/` | the team (commit it) |
+| one launch | `args` | one run |
+
+Later layers win. Each layer can hold:
+
+- **`config.json`**: any launch argument. That includes commands (`pm`, `typecheckCmd`, `suiteCmd`), git (`baseBranch`, `push`), models per role, concurrency, handoff budget, and agent types.
+- **`overrides.md`**: plain-language rules, in three kinds of section.
+  - `## Foreman` is read by your main session only: deploy steps, ports, when to stop.
+  - `## All workers` is added to every agent's prompt.
+  - `## Role: walk` (or `port`, `fix`, `verify1`, `verify2`, `merge`, `suite`, `review`) is added to that role only.
+- **`contract.md`**: your own contract template.
+
+`node ~/.claude/skills/unit-workflow/scripts/resolve.mjs <repo>` shows what was read and the merged launch args. The foreman runs it before every launch, so agents pick up your overrides without being told. The full key list is in [SKILL.md](skill/unit-workflow/SKILL.md#customize-the-override-layers). A worked example for a fictional app is in [examples/.unit-workflow/](examples/.unit-workflow/).
+
+To give a project's workers different tools, put a `lean-worker.md` or `lean-checker.md` in `<repo>/.claude/agents/`. Project agent types take precedence over your user-level ones.
 
 ---
 
@@ -221,9 +247,10 @@ Everything the foreman does is spelled out in [skill/unit-workflow/SKILL.md](ski
 | [docs/rules.md](docs/rules.md) | Every rule the workflow runs on, with the incident that produced it. |
 | [docs/diagrams/](docs/diagrams/) | The diagram above as editable draw.io, PNG, and the Python script that draws it. |
 | [dashboard/](dashboard/) | The live dashboard: a flowchart and a board of every unit, refreshed every 3 seconds from the files on disk. `pnpm demo` plays a simulated build. |
-| [skill/unit-workflow/](skill/unit-workflow/) | The Claude Code skill: SKILL.md, the saved workflow script, the contract template, the status command. |
-| [examples/contracts/](examples/contracts/) | Three real contracts from production units: a feature, a numbers-heavy estimate, an external integration. |
-| [examples/units.json](examples/units.json) | A real slice of the registry, showing the lifecycle fields. |
+| [skill/unit-workflow/](skill/unit-workflow/) | The Claude Code skill: SKILL.md, the saved workflow script, `defaults.json`, the contract and override templates, the resolve and status commands. |
+| [agents/](agents/) | The lean agent types every worker runs as. |
+| [install.mjs](install.mjs) | Installs or updates everything; never touches your overrides. |
+| [examples/](examples/) | A fictional app's contracts (a UI feature, a risky integration), a slice of its registry, and its `.unit-workflow/` overrides. |
 
 ---
 
@@ -234,10 +261,10 @@ The engine is a Claude Code **dynamic workflow**: a short JavaScript script that
 - `agent()` starts one worker with a prompt, a model, a cap on tool calls, its own worktree, and a JSON schema its report must match.
 - `pipeline()` takes each unit through build, check, fix, second check and merge on its own. A unit merges the moment it clears, behind a lock so only one merge runs at a time, while other units are still being checked.
 - One integration pass runs after the last merge.
-- The same script serves every project. Paths and commands arrive as launch `args`, and `args.only` reruns a subset of units by key.
+- The same script serves every project. Paths, commands, models and rules arrive as launch `args`, resolved from the override layers, and `args.only` reruns a subset of units by key.
 - Every run has an id and a journal of what each agent returned. A stopped or edited run resumes from that journal instead of starting over.
 
-**Models.** The foreman, your main session, writes the contracts. Claude Opus 5.5 builds, fixes and reviews risky diffs. Claude Sonnet 5.5 runs the checks, walks the screens, merges and runs the suite. Every worker uses a lean agent type (`agents/lean-worker.md`, `agents/lean-checker.md`; copy them to `~/.claude/agents/`) that skips connectors and skills. Builders hand off to a fresh agent after about 50 tool calls. Caps: three Opus and six Sonnet at a time (`args.maxOpus`, `args.maxSonnet`); `args.models` changes the model for any role.
+**Models.** The foreman, your main session, writes the contracts. Claude Opus 5.5 builds, fixes and reviews risky diffs. Claude Sonnet 5.5 runs the checks, walks the screens, merges and runs the suite. Every worker uses a lean agent type (`agents/`) that skips connectors and skills. Builders hand off to a fresh agent after about 50 tool calls. Three Opus and six Sonnet agents run at a time. All of it can be changed per project in the override layers.
 
 **Cost.** A feature-sized unit spends 400k to 1.1M tokens across its six to ten workers. That is the price of isolation and independent checking. It is still cheaper than one long chat that rereads the codebase twice and ships something half-checked.
 
@@ -253,7 +280,7 @@ The engine is a Claude Code **dynamic workflow**: a short JavaScript script that
 
 ## Status
 
-Public beta. The skill, script template and rules come from a production project where they run every day. The project-specific defaults live in one marked section of `SKILL.md` and reach the script as launch `args`, so adopting it is an edit, not a rewrite. Issues and questions are welcome.
+Public beta. The skill, script template and rules come from a production project where they run every day. Everything project-specific lives in your override layers, so adopting it is a config file, not a fork. Issues and questions are welcome.
 
 ## License
 

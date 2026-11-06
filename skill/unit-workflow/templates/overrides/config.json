@@ -1,0 +1,15 @@
+{
+  "//": "unit-workflow overrides. Every key is optional; delete what you do not need. Full list and meaning: SKILL.md, section Customize. Keys starting with // are ignored.",
+  "project": "My app",
+  "planDir": "docs/plan",
+  "planDocs": "docs/architecture.md, contracts/<unit>.md",
+  "pm": "npm",
+  "suiteCmd": "npm run build, then npm test (tail -60)",
+  "typecheckCmd": "npm run typecheck",
+  "verifyCmd": "npm run lint",
+  "baseBranch": "main",
+  "push": false,
+  "models": { "walk": "sonnet" },
+  "maxOpus": 3,
+  "maxSonnet": 6
+}
